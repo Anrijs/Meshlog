@@ -1929,21 +1929,21 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
     return R * c; // Distance in km
 }
 
-function escapeXml(str) {
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
+    function escapeXml(str) {
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
 }
 
-function str2color(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
+function str2color(str, saturation = 65, lightness = 45) {
+    let hash = 0x811c9dc5n;
+    for (let i = 0; i < str.length; i++) {
+        hash = BigInt.asIntN(32, hash ^ BigInt(str.charCodeAt(i)));
+        hash = BigInt.asIntN(32, hash * 0x01000193n);
+    }
 
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 65%, 55%)`;
+    return `hsl(${Number(hash & 0xFFFFFFFFn) % 360}deg, ${saturation}%, ${lightness}%)`;
 }
