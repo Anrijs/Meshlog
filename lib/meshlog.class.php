@@ -5,8 +5,8 @@ require_once 'meshlog.entity.class.php';
 require_once 'meshlog.advertisement.class.php';
 require_once 'meshlog.contact.class.php';
 require_once 'meshlog.direct_message.class.php';
-require_once 'meshlog.group_message.class.php';
-require_once 'meshlog.group.class.php';
+require_once 'meshlog.channel_message.class.php';
+require_once 'meshlog.channel.class.php';
 require_once 'meshlog.reporter.class.php';
 
 define("MAX_COUNT", 5000);
@@ -126,21 +126,21 @@ class MeshLog {
         if (!$text) return $this->repError('no message');
         $name = explode(':', $text, 2)[0];
 
-        $group = MeshLogGroup::findBy("hash", $hash, $this);
+        $channel = MeshLogChannel::findBy("hash", $hash, $this);
 
-        if (!$group) {
-            $group = MeshLogGroup::fromJson($data, $this);
-            if (!$group->save($this)) return $this->repError('failed to save group');
+        if (!$channel) {
+            $channel = MeshLogChannel::fromJson($data, $this);
+            if (!$channel->save($this)) return $this->repError('failed to save channel');
         }
 
         $advertisement = MeshLogAdvertisement::findBy("name", $name, $this);
         $contact = null;
         if ($advertisement) $contact = MeshLogContact::findById($advertisement->contact_ref->getId(), $this);
 
-        $grpmsg = MeshLogGroupMessage::fromJson($data, $this);
+        $grpmsg = MeshLogChannelMessage::fromJson($data, $this);
         $grpmsg->reporter_ref = $reporter;
         $grpmsg->contact_ref = $contact;
-        $grpmsg->group_ref = $group;
+        $grpmsg->channel_ref = $channel;
 
         return $grpmsg->save($this);
     }
@@ -192,18 +192,18 @@ class MeshLog {
         return MeshLogAdvertisement::getAll($this, $params);
     }
 
-    public function getGroups($params) {
+    public function getChannels($params) {
         $params['where'] = array();
-        return MeshLogGroup::getAll($this, $params);
+        return MeshLogChannel::getAll($this, $params);
     }
 
-    public function getGroupMessages($params) {
+    public function getChannelMessages($params) {
         $params['where'] = array();
         if (isset($params['id'])) {
-            $params['where'] = array('group_id = ' . intval($id));
+            $params['where'] = array('channel_id = ' . intval($id));
         }
 
-        return MeshLogGroupMessage::getAll($this, $params);
+        return MeshLogChannelMessage::getAll($this, $params);
     }
 
     public function getDirectMessages($params) {

@@ -1,11 +1,11 @@
 <?php
 
-class MeshLogGroupMessage extends MeshLogEntity {
-    protected static $table = "group_messages";
+class MeshLogChannelMessage extends MeshLogEntity {
+    protected static $table = "channel_messages";
 
     public $contact_ref = null;  // MeshLogContact
     public $reporter_ref = null; // MeshLogReporter
-    public $group_ref = null;    // MeshLogGroup
+    public $channel_ref = null;    // MeshLogChannel
 
     public $hash = null;
     public $name = null;
@@ -17,7 +17,7 @@ class MeshLogGroupMessage extends MeshLogEntity {
     public $created_at = null;
 
     public static function fromJson($data, $meshlog) {
-        $m = new MeshLogGroupMessage($meshlog);
+        $m = new MeshLogChannelMessage($meshlog);
         
         if (!isset($data['message'])) return $m;
         if (!isset($data['time'])) return $m;
@@ -41,7 +41,7 @@ class MeshLogGroupMessage extends MeshLogEntity {
     public static function fromDb($data, $meshlog) {
         if (!$data) return null;
 
-        $m = new MeshLogGroupMessage($meshlog);
+        $m = new MeshLogChannelMessage($meshlog);
 
         $m->_id = $data['id'];
         $m->hash = $data['hash'];
@@ -55,7 +55,7 @@ class MeshLogGroupMessage extends MeshLogEntity {
 
         $m->contact_ref = MeshLogContact::findById($data['contact_id'], $meshlog);
         $m->reporter_ref = MeshLogReporter::findById($data['reporter_id'], $meshlog);
-        $m->group_ref = MeshLogGroup::findById($data['group_id'], $meshlog);
+        $m->channel_ref = MeshLogChannel::findById($data['channel_id'], $meshlog);
 
         return $m;
     }
@@ -84,7 +84,7 @@ class MeshLogGroupMessage extends MeshLogEntity {
             'id' => $this->getId(),
             'contact_id' => $cid,
             'reporter_id' => $rid,
-            'group_id' => $this->group_ref->getId(),
+            'channel_id' => $this->channel_ref->getId(),
             'hash' => $this->hash,
             'name' => $this->name,
             'message' => $this->message,
@@ -105,7 +105,7 @@ class MeshLogGroupMessage extends MeshLogEntity {
         return array(
             "contact_id" => array($cid, PDO::PARAM_INT),
             "reporter_id" => array($rid, PDO::PARAM_INT),
-            "group_id" => array($this->group_ref->getId(), PDO::PARAM_INT),
+            "channel_id" => array($this->channel_ref->getId(), PDO::PARAM_INT),
             "hash" => array($this->hash, PDO::PARAM_STR),
             "name" => array($this->name, PDO::PARAM_STR),
             "message" => array($this->message, PDO::PARAM_STR),

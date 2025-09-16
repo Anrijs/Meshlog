@@ -26,7 +26,7 @@ class MeshLogObject {
 }
 
 class MeshLogReporter extends MeshLogObject {}
-class MeshLogGroup extends MeshLogObject {}
+class MeshLogChannel extends MeshLogObject {}
 
 class MeshLogContact extends MeshLogObject {
     constructor(meshlog, data) {
@@ -541,7 +541,7 @@ class MeshLogGroupChild extends MeshLogObject {
     pathTag() { return '?'; }
 }
 
-class MeshLogGroupMessage extends MeshLogGroupChild {
+class MeshLogChannelMessage extends MeshLogGroupChild {
     pathTag() { return 'g'; }
 }
 class MeshLogDirecMessage extends MeshLogGroupChild {
@@ -724,11 +724,11 @@ class MeshLogMessageGroup extends MeshLogObject {
             this.dom.text.innerText = "Advert";
             this.dom.text.style.color = 'gray';
             hidden = !this._meshlog.settings.types.advertisements;
-        } else if (msg instanceof MeshLogGroupMessage) {
+        } else if (msg instanceof MeshLogChannelMessage) {
             this.dom.text.innerText = msg.data.message;
             this.dom.name.style.color = '#d87dff'
             this.dom.text.style.color = 'white';
-            hidden = !this._meshlog.settings.types.group_messages;
+            hidden = !this._meshlog.settings.types.channel_messages;
         } else if (msg instanceof MeshLogDirecMessage) {
             this.dom.text.innerText = msg.data.message;
             this.dom.text.style.color = 'white';
@@ -762,8 +762,8 @@ class MeshLog {
         this.reporters = {};
         this.contacts = {};
         this.advertisements = {};
-        this.groups = {};
-        this.group_messages = {};
+        this.channels = {};
+        this.channel_messages = {};
         this.direct_messages = {};
 
         this.messages = {};
@@ -800,7 +800,7 @@ class MeshLog {
         this.settings = {
             types: {
                 advertisements: true,
-                group_messages: true,
+                channel_messages: true,
                 direct_messages: false,
             },
             reporters: {
@@ -953,11 +953,11 @@ class MeshLog {
 
         this.dom_settings_types.appendChild(
             this.__createCb(
-                "Group Messages",
+                "Channel Messages",
                 "assets/img/message.png",
-                this.settings.types.group_messages,
+                this.settings.types.channel_messages,
                 (e) => {
-                    this.settings.types.group_messages = e.target.checked;
+                    this.settings.types.channel_messages = e.target.checked;
                     self.__onTypesChanged(e);
                 }
             )
@@ -1126,7 +1126,7 @@ class MeshLog {
             oldest_adv = Math.min(oldest_adv, created_at);
         });
 
-        Object.entries(this.group_messages).forEach(([k,v]) => {
+        Object.entries(this.channel_messages).forEach(([k,v]) => {
             let created_at = new Date(v.data.created_at).getTime();
             oldest_grp = Math.min(oldest_grp, created_at);
         });
@@ -1143,8 +1143,8 @@ class MeshLog {
             if (onload) onload();
         });
 
-        this.__fetchQuery({ "before_ms": oldest_grp }, 'api/v1/group_messages', data => {
-            const rep = self.__loadObjects(self.group_messages, data, MeshLogGroupMessage);
+        this.__fetchQuery({ "before_ms": oldest_grp }, 'api/v1/channel_messages', data => {
+            const rep = self.__loadObjects(self.channel_messages, data, MeshLogChannelMessage);
             if (rep.length) console.log(`${rep.length} group messages loaded`);
             self.onLoadAll();
             if (onload) onload();
@@ -1163,10 +1163,10 @@ class MeshLog {
         this.__fetchQuery(params, 'api/v1/all', data => {
             const rep1 = this.__loadObjects(this.reporters, data.reporters, MeshLogReporter);
             const rep2 = this.__loadObjects(this.contacts, data.contacts, MeshLogContact);
-            const rep4 = this.__loadObjects(this.groups, data.groups, MeshLogGroup);
+            const rep4 = this.__loadObjects(this.channels, data.channels, MeshLogChannel);
 
             const rep3 = this.__loadObjects(this.advertisements, data.advertisements, MeshLogAdvertisement);
-            const rep5 = this.__loadObjects(this.group_messages, data.group_messages, MeshLogGroupMessage);
+            const rep5 = this.__loadObjects(this.channel_messages, data.channel_messages, MeshLogChannelMessage);
             const rep6 = this.__loadObjects(this.direct_messages, data.direct_messages, MeshLogDirecMessage);
 
             if (rep1.length) console.log(`${rep1.length} reporters loaded`);
@@ -1185,7 +1185,7 @@ class MeshLog {
                     contacts: rep2,
                     groups: rep4,
                     advertisements: rep3,
-                    group_messages: rep5,
+                    channel_messages: rep5,
                     direct_messages: rep6,
                 });
             }
@@ -1263,7 +1263,7 @@ class MeshLog {
 
     onLoadMessages() {
         Object.entries(this.advertisements).forEach(([id,_]) => { this.addMessage(this.advertisements[id]); });
-        Object.entries(this.group_messages).forEach(([id,_]) => { this.addMessage(this.group_messages[id]); });
+        Object.entries(this.channel_messages).forEach(([id,_]) => { this.addMessage(this.channel_messages[id]); });
         Object.entries(this.direct_messages).forEach(([id,_]) => { this.addMessage(this.direct_messages[id]); });
 
         this.update();
@@ -1298,18 +1298,18 @@ class MeshLog {
         });
     }
 
-    loadGroups(params={}, onload=null) {
-        this.__fetchQuery(params, 'api/v1/groups', data => {
-            const sz = this.__loadObjects(this.groups, data, MeshLogObject);
-            console.log(`${sz} groups loaded`);
+    loadChannels(params={}, onload=null) {
+        this.__fetchQuery(params, 'api/v1/channels', data => {
+            const sz = this.__loadObjects(this.channels, data, MeshLogObject);
+            console.log(`${sz} channels loaded`);
             if (onload) onload();
         });
     }
 
-    loadGroupMessages(params={}, onload=null) {
-        this.__fetchQuery(params, 'api/v1/group_messages', data => {
-            const sz = this.__loadObjects(this.group_messages, data, MeshLogGroupMessage);
-            console.log(`${sz} group messages loaded`);
+    loadChannelMessages(params={}, onload=null) {
+        this.__fetchQuery(params, 'api/v1/channel_messages', data => {
+            const sz = this.__loadObjects(this.channel_messages, data, MeshLogChannelMessage);
+            console.log(`${sz} channels messages loaded`);
             if (onload) onload();
         });
     }
@@ -1506,7 +1506,7 @@ class MeshLog {
     }
 
     onNewMessage(msg) {
-        if (msg instanceof MeshLogGroupMessage || msg instanceof MeshLogDirecMessage) {
+        if (msg instanceof MeshLogChannelMessage || msg instanceof MeshLogDirecMessage) {
             const hash = msg.data.hash;
             if (!this.new_messages.hasOwnProperty(hash)) {
                 this.new_messages[hash] = [];

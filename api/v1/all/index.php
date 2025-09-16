@@ -23,18 +23,18 @@ $paramsContacts = array(
 $reporters = $meshlog->getReporters($params);
 $contacts = $meshlog->getContacts($paramsContacts);
 $advertisements = $meshlog->getAdvertisements($params);
-$groups = $meshlog->getGroups($params);
+$channels = $meshlog->getChannels($params);
 $direct_messages = $meshlog->getDirectMessages($params);
-$group_messages = $meshlog->getGroupMessages($params);
+$channel_messages = $meshlog->getChannelMessages($params);
 
 header('Content-Type: application/json; charset=utf-8');
 echo json_encode(array(
     'reporters' => $reporters,
     'contacts' => $contacts,
     'advertisements' => $advertisements,
-    'groups' => $groups,
+    'channels' => $channels,
     'direct_messages' => $direct_messages,
-    'group_messages' => $group_messages
+    'channel_messages' => $channel_messages
 ), JSON_PRETTY_PRINT);
 
 ?>

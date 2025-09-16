@@ -1,14 +1,14 @@
 <?php
 
-class MeshLogGroup extends MeshLogEntity {
-    protected static $table = "groups";
+class MeshLogChannel extends MeshLogEntity {
+    protected static $table = "channels";
 
     public $hash = null;
     public $name = null;
     public $enabled = null;
 
     public static function fromJson($data, $meshlog) {
-        $m = new MeshLogGroup($meshlog);
+        $m = new MeshLogChannel($meshlog);
 
         $m->hash = $data['channel']['hash'] ?? '11';
         $m->name = $data['channel']['name'] ?? 'unknown';

@@ -55,10 +55,10 @@ CREATE TABLE `direct_messages` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `groups`
+-- Table structure for table `channels`
 --
 
-CREATE TABLE `groups` (
+CREATE TABLE `channels` (
   `id` int(11) NOT NULL,
   `hash` varchar(16) NOT NULL,
   `name` varchar(32) NOT NULL,
@@ -69,15 +69,15 @@ CREATE TABLE `groups` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `group_messages`
+-- Table structure for table `channel_messages`
 --
 
-CREATE TABLE `group_messages` (
+CREATE TABLE `channel_messages` (
   `id` int(11) NOT NULL,
   `contact_id` int(11) DEFAULT NULL COMMENT 'who sent message (presumed)',
   `reporter_id` int(11) NOT NULL COMMENT 'who received and reported',
   `hash` varchar(16) NOT NULL,
-  `group_id` int(11) NOT NULL COMMENT 'group id',
+  `channel_id` int(11) NOT NULL COMMENT 'channel id',
   `name` varchar(128) NOT NULL,
   `message` varchar(320) NOT NULL,
   `path` varchar(192) NOT NULL,
@@ -167,20 +167,20 @@ ALTER TABLE `direct_messages`
   ADD KEY `reporter_id` (`reporter_id`);
 
 --
--- Indexes for table `groups`
+-- Indexes for table `channels`
 --
-ALTER TABLE `groups`
+ALTER TABLE `channels`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `group_hash` (`hash`);
+  ADD UNIQUE KEY `channel_hash` (`hash`);
 
 --
--- Indexes for table `group_messages`
+-- Indexes for table `channel_messages`
 --
-ALTER TABLE `group_messages`
+ALTER TABLE `channel_messages`
   ADD PRIMARY KEY (`id`),
   ADD KEY `contact_id` (`contact_id`),
   ADD KEY `reporter_id` (`reporter_id`),
-  ADD KEY `group_id` (`group_id`);
+  ADD KEY `channel_id` (`channel_id`);
 
 --
 -- Indexes for table `logs`
@@ -223,15 +223,15 @@ ALTER TABLE `direct_messages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `groups`
+-- AUTO_INCREMENT for table `channels`
 --
-ALTER TABLE `groups`
+ALTER TABLE `channels`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `group_messages`
+-- AUTO_INCREMENT for table `channel_messages`
 --
-ALTER TABLE `group_messages`
+ALTER TABLE `channel_messages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -271,10 +271,10 @@ ALTER TABLE `direct_messages`
   ADD CONSTRAINT `direct_messages_ibfk_2` FOREIGN KEY (`reporter_id`) REFERENCES `reporters` (`id`);
 
 --
--- Constraints for table `group_messages`
+-- Constraints for table `channel_messages`
 --
-ALTER TABLE `group_messages`
-  ADD CONSTRAINT `group_messages_ibfk_1` FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`),
-  ADD CONSTRAINT `group_messages_ibfk_2` FOREIGN KEY (`reporter_id`) REFERENCES `reporters` (`id`),
-  ADD CONSTRAINT `group_messages_ibfk_3` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`);
+ALTER TABLE `channel_messages`
+  ADD CONSTRAINT `channel_messages_ibfk_1` FOREIGN KEY (`contact_id`) REFERENCES `contacts` (`id`),
+  ADD CONSTRAINT `channel_messages_ibfk_2` FOREIGN KEY (`reporter_id`) REFERENCES `reporters` (`id`),
+  ADD CONSTRAINT `channel_messages_ibfk_3` FOREIGN KEY (`channel_id`) REFERENCES `channels` (`id`);
 COMMIT;
