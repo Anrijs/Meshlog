@@ -34,9 +34,8 @@ class MeshLogAdvertisement extends MeshLogEntity {
         $m->type = $data['contact']['type'] ?: 0;
         $m->flags = $data['contact']['flags'] ?: 0;
 
-        // fix latlon
-        if ($m->lat > 1000000) $m->lat /= 1000000.0;
-        if ($m->lon > 1000000) $m->lon /= 1000000.0;
+        $m->lat /= 1000000.0;
+        $m->lon /= 1000000.0;
 
         $m->sent_at = Utils::time2str($data['time']['local']) ?? null;
         $m->received_at = Utils::time2str($data['time']['sender']) ?? null;
