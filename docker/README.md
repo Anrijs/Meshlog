@@ -39,9 +39,9 @@ Example configuration:
 
 ```env
 DB_NAME=meshcore
-DB_USER=meshuser
-DB_PASS=meshpass
-DB_ROOT_PASS=meshroot
+DB_USER=meshcore
+DB_PASS=meshcore
+DB_ROOT_PASS=meshcore
 TIMEZONE=Europe/Riga
 ```
 
