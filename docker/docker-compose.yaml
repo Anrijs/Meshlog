@@ -1,0 +1,41 @@
+name: meshlog
+services:
+  mariadb:
+    image: mariadb:12
+    container_name: mariadb
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-meshcore}
+      MYSQL_USER: ${DB_USER:-meshcore}
+      MYSQL_PASSWORD: ${DB_PASS:-meshcore}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:-meshcore}
+    volumes:
+      - ../setup.sql:/docker-entrypoint-initdb.d/10-setup.sql:ro
+      - ./build/import-setup.sh:/docker-entrypoint-initdb.d/20-import-setup.sh:ro
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -uroot -p${DB_ROOT_PASS:-meshcore} || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/build/Dockerfile
+    container_name: backend
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      TIMEZONE: ${TIMEZONE:-Europe/Riga}
+      DB_HOST: mariadb
+      DB_NAME: ${DB_NAME:-meshcore}
+      DB_USER: ${DB_USER:-meshcore}
+      DB_PASS: ${DB_PASS:-meshcore}
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  mariadb-data:
