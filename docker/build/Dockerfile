@@ -1,6 +1,6 @@
 FROM php:8.4-fpm-alpine
 
-RUN apk add --no-cache nginx supervisor bash tzdata mc \
+RUN apk add --no-cache nginx supervisor bash tzdata \
 	&& docker-php-ext-install mysqli pdo pdo_mysql
 
 ENV TZ=${TIMEZONE}
