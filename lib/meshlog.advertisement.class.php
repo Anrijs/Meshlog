@@ -30,9 +30,9 @@ class MeshLogAdvertisement extends MeshLogEntity {
         $m->lat = floatval($data['contact']['lat']) ?? 0.0;
         $m->lon = floatval($data['contact']['lon']) ?? 0.0;
         $m->path = $data['message']['path'] ?? null;
-        $m->snr = $data['snr'] ?: null;
-        $m->type = $data['contact']['type'] ?: 0;
-        $m->flags = $data['contact']['flags'] ?: 0;
+        $m->snr = $data['snr'] ?? null;
+        $m->type = $data['contact']['type'] ?? 0;
+        $m->flags = $data['contact']['flags'] ?? 0;
 
         $m->lat /= 1000000.0;
         $m->lon /= 1000000.0;

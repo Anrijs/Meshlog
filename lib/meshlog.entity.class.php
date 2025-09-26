@@ -108,12 +108,12 @@ class MeshLogEntity {
     }
 
     public static function getAll($meshlog, $params) {
-        $offset = $params['offset'] ?: 0;
-        $count = $params['count'] ?: DEFAULT_COUNT;
-        $after_ms = $params['after_ms'] ?: 0;
-        $before_ms = $params['before_ms'] ?: 0;
+        $offset = $params['offset'] ?? 0;
+        $count = $params['count'] ?? DEFAULT_COUNT;
+        $after_ms = $params['after_ms'] ?? 0;
+        $before_ms = $params['before_ms'] ?? 0;
 
-        $where = $params['where'] ?: array();
+        $where = $params['where'] ?? array();
 
         $sqlWhere = '';
         $sqlBind = array();
