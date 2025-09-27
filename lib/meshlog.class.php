@@ -14,8 +14,14 @@ define("DEFAULT_COUNT", 500);
 
 class MeshLog {
 
-    function __construct($pdo) {
-        $this->pdo = $pdo;
+    function __construct($config) {
+        $host = $config['host'] ?? die("Invalid db config");
+        $name = $config['database'] ?? die("Invalid db config");
+        $user = $config['user'] ?? die("Invalid db config");
+        $pass = $config['password'] ?? die("Invalid db config");
+        $this->pdo = new PDO("mysql:host=$host;dbname=$name;charset=utf8mb4", $user, $pass);
+        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->loadSettings();
     }
 
     function __destruct() {
