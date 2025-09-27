@@ -10,6 +10,32 @@ html {
     background: #262626;
 }
 
+h1 {
+    font-size: 1.4em;
+}
+
+h2 {
+    font-size: 1.2em;
+}
+
+#error {
+    background-color: #B00020;
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    padding: 12px;
+    top: -50px;
+    left: 0;
+    transition: top 0.5s ease;
+    z-index: 10000;
+    width: 100%;
+    position: absolute;
+}
+
+#error.show {
+    top: 0; /* Slide down into view */
+}
+
 .prio-2 {
     color: gray !important;
 }
@@ -351,4 +377,58 @@ html {
 .tooltip-detail {
     color: #444;
     font-size: 0.8em;
+}
+
+#login {
+    display: flex;
+    justify-content: center;
+}
+
+#login > section {
+    width: 400px;
+    margin-top: 32px;
+    background: #fff;
+    padding: 12px;
+    border-radius: 4px;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form-group {
+    align-items: center;
+    margin: 8px 0;
+}
+
+.form-group label {
+    margin-right: 8px;
+    display: block
+}
+
+.form-group input {
+    width: 100%;
+    display: block;
+    margin-right: 8px;
+}
+
+
+.form-title {
+    text-align: center;
+    margin: 10px;
+}
+
+.right {
+    justify-content: right;
+}
+
+.error {
+    color: #ca0025;
+}
+
+.code {
+    background-color: #f3f3f3;
+    border: solid 1px #e6e6e6;
+    border-radius: 2px;
+    padding: 2px;
+    font-family: monospace;
+    margin: 2px 0;
 }

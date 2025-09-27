@@ -1482,7 +1482,7 @@ class MeshLog {
                     new Audio('assets/audio/notif.mp3').play();
                 }
 
-                document.getElementById('favicon').setAttribute('href','faviconr.ico');
+                document.getElementById('favicon').setAttribute('href','assets/favicon/faviconr.ico');
                 document.title = `(${count}) MeshCore Log`; 
             }
         });
@@ -1517,7 +1517,7 @@ class MeshLog {
 
     clearNotifications() {
         this.new_messages = [];
-        document.getElementById('favicon').setAttribute('href','faviconw.ico');
+        document.getElementById('favicon').setAttribute('href','assets/favicon/faviconw.ico');
         document.title = `MeshCore Log`; 
     }
 
