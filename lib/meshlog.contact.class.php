@@ -38,7 +38,7 @@ class MeshLogContact extends MeshLogEntity {
         return parent::isValid();
     }
 
-    public function asArray() {
+    public function asArray($secret = false) {
         return array(
             'id' => $this->getId(),
             'public_key' => $this->public_key,

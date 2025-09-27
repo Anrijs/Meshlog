@@ -99,7 +99,7 @@ class MeshLogEntity {
         return $result;
     }
 
-    public function asArray() {
+    public function asArray($secret=false) {
         return array();
     }
 
@@ -112,6 +112,7 @@ class MeshLogEntity {
         $count = $params['count'] ?? DEFAULT_COUNT;
         $after_ms = $params['after_ms'] ?? 0;
         $before_ms = $params['before_ms'] ?? 0;
+        $secret = $params['secret'] ?? false;
 
         $where = $params['where'] ?? array();
 
@@ -162,7 +163,7 @@ class MeshLogEntity {
         
         $objects = array();
         foreach ($result as $r) {
-            $objects[] = static::fromDb($r, $meshlog)->asArray();
+            $objects[] = static::fromDb($r, $meshlog)->asArray($secret);
         }
         return array(
             "objects" => $objects

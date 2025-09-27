@@ -98,7 +98,7 @@ class MeshLogAdvertisement extends MeshLogEntity {
         return true;
     }
 
-    public function asArray() {
+    public function asArray($secret = false) {
         $rid = null;
         $cid = null;
 

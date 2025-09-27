@@ -37,7 +37,7 @@ class MeshLogChannel extends MeshLogEntity {
         return true;
     }
 
-    public function asArray() {
+    public function asArray($secret = false) {
         return array(
             'id' => $this->getId(),
             'hash' => $this->hasj,

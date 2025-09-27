@@ -9,6 +9,7 @@ class MeshLogReporter extends MeshLogEntity {
     public $lat = null;
     public $lon = null;
     public $color = null;
+    public $auth = null;
 
     public static function fromDb($data, $meshlog) {
         if (!$data) return null;
@@ -22,19 +23,27 @@ class MeshLogReporter extends MeshLogEntity {
         $m->lat = $data['lat'];
         $m->lon = $data['lon'];
         $m->color = $data['color'];
+        $m->auth = $data['auth'];
 
         return $m;
     }
 
-    public function asArray() {
-        return array(
+    public function asArray($secret = false) {
+        $data = array(
             'id' => $this->getId(),
             'name' => $this->name,
             'public_key' => $this->public_key,
             'lat' => $this->lat,
             'lon' => $this->lon,
-            'color' => $this->color
+            'color' => $this->color,
         );
+
+        if ($secret) {
+            $data['auth'] = $this->auth;
+            $data['authorized'] = $this->authorized;
+        }
+
+        return $data;
     }
 
     public function updateLocation($meshlog, $lat, $lon) {
