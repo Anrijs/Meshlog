@@ -3,7 +3,7 @@ require_once "../../../lib/meshlog.class.php";
 require_once "../../../config.php";
 include "../utils.php";
 
-$meshlog = new MeshLog(openPdo());
+$meshlog = new MeshLog($config['db']);
 
 $params = array(
     'offset' => getParam('offset', 0),
