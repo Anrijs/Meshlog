@@ -65,7 +65,19 @@ class MeshLogReporter extends MeshLogEntity {
 
         return parent::isValid();
     }
+
+    protected function getParams() {
+        return array(
+            "name" => array($this->name, PDO::PARAM_STR),
+            "public_key" => array($this->public_key, PDO::PARAM_STR),
+            "authorized" => array($this->authorized, PDO::PARAM_STR),
+            "lat" => array($this->lat, PDO::PARAM_STR),
+            "lon" => array($this->lon, PDO::PARAM_STR),
+            "color" => array($this->color, PDO::PARAM_STR),
+            "auth" => array($this->auth, PDO::PARAM_STR),
+        );
     }
+    
 }
 
 ?>
