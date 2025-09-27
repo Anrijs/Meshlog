@@ -17,6 +17,7 @@
 </head>
 <body>
 
+<div id="error"></div>
 <div id="container">
 <div id="leftbar">
     <div class="settings" id="settings-types">
@@ -207,7 +208,8 @@ var meshlog = new MeshLog(
     "contacts",
     "settings-types",
     "settings-reporters",
-    "settings-contacts"
+    "settings-contacts",
+    "error"
 );
 meshlog.loadAll();
 meshlog.setAutorefresh(10000);

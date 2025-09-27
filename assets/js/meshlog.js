@@ -758,7 +758,7 @@ class MeshLogMessageGroup extends MeshLogObject {
 }
 
 class MeshLog {
-    constructor(map, logsid, contactsid, stypesid, sreportersid, scontactsid) {
+    constructor(map, logsid, contactsid, stypesid, sreportersid, scontactsid, errorid) {
         this.reporters = {};
         this.contacts = {};
         this.advertisements = {};
@@ -775,6 +775,7 @@ class MeshLog {
         this.link_pairs = {};
         this.dom_logs = document.getElementById(logsid);
         this.dom_contacts = document.getElementById(contactsid);
+        this.dom_error = document.getElementById(errorid);
         this.timer = false;
         this.autorefresh = 0;
 
@@ -1079,8 +1080,17 @@ class MeshLog {
             .then(data => onResponse(data));
     }
 
-    showError(err) {
-        alert(err);
+    showError(message, timeout=0) {
+        this.setAutorefresh(0);
+        this.dom_error.innerHTML = message;
+        this.dom_error.classList.add('show');
+
+        // Auto-hide after duration
+        if (timeout > 0) {
+           setTimeout(() => {
+                errorBar.classList.remove('show');
+            }, timeout);
+        }
     }
 
     __loadObjects(dataset, data, klass) {
@@ -1158,9 +1168,13 @@ class MeshLog {
         });
     }
 
-
     loadAll(params={}, onload=null) {
         this.__fetchQuery(params, 'api/v1/all', data => {
+            if (data.error) {
+                this.showError(data.error);
+                return;
+            }
+
             const rep1 = this.__loadObjects(this.reporters, data.reporters, MeshLogReporter);
             const rep2 = this.__loadObjects(this.contacts, data.contacts, MeshLogContact);
             const rep4 = this.__loadObjects(this.channels, data.channels, MeshLogChannel);
