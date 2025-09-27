@@ -1374,11 +1374,13 @@ class MeshLog {
             if (hashes.length > 0) {
                 Object.entries(this.contacts).forEach(([k,v]) => {
                     if (v.hash == hashes[0] && v.adv && !v.adv.isVeryExpired()) {
-                        last.push([v.adv.data.lat, v.adv.data.lon]);
-                        if (v.marker) {
-                            this.visible_markers.push(v.marker);
-                            this.map.removeLayer(v.marker);
-                            v.marker.addTo(this.map);
+                        if (v.adv.data.lat != 0 && v.adv.data.lon != 0) {
+                            last.push([v.adv.data.lat, v.adv.data.lon]);
+                            if (v.marker) {
+                                this.visible_markers.push(v.marker);
+                                this.map.removeLayer(v.marker);
+                                v.marker.addTo(this.map);
+                            }
                         }
                     }
                 });
@@ -1399,7 +1401,9 @@ class MeshLog {
                 this.map.removeLayer(src.marker);
                 src.marker.addTo(this.map);
             }
-            last.push([src.adv.data.lat, src.adv.data.lon]);
+            if (src.adv.data.lat != 0 && src.adv.data.lon != 0) {
+                last.push([src.adv.data.lat, src.adv.data.lon]);
+            }
         }
 
         const ln_weight = 2;
@@ -1411,12 +1415,14 @@ class MeshLog {
             let next = [];
             Object.entries(this.contacts).forEach(([k,v]) => {
                 if (v.hash == hashes[i] && v.adv && !v.adv.isVeryExpired()) {
+                    let current = [v.adv.data.lat, v.adv.data.lon];
+                    if (current[0] == 0 && current[1] == 0) return;
+
                     if (v.marker) {
                         this.visible_markers.push(v.marker);
                         this.map.removeLayer(v.marker);
                         v.marker.addTo(this.map);
                     }
-                    let current = [v.adv.data.lat, v.adv.data.lon];
                     for (let j=0;j<last.length;j++) {
                         let pair_id = `${last[j][0]}-${last[j][1]}_${current[0]}-${current[1]}`;
                         if (!this.link_pairs.hasOwnProperty(pair_id)) {
