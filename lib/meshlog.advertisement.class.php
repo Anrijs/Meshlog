@@ -80,19 +80,19 @@ class MeshLogAdvertisement extends MeshLogEntity {
         if ($this->contact_ref == null) return false;
         if ($this->reporter_ref == null) return false;
 
-        if ($this->name == null) { $err .= 'no name,'; }
-        if ($this->hash == null) { $err .= 'no hash,'; }
+        if ($this->name == null) { $err .= 'Missing name,'; }
+        if ($this->hash == null) { $err .= 'Missing hash,'; }
         if ($this->type != 1) {
-          if ($this->lat == null) { $err .= 'no lat,'; }
-          if ($this->lon == null) { $err .= 'no lon,'; }
+          if ($this->lat == null) { $err .= 'Missing lat,'; }
+          if ($this->lon == null) { $err .= 'Missing lon,'; }
         }
-        if ($this->snr == null) { $err .= 'no snr,'; }
-        if ($this->sent_at == null) { $err .= 'no sent_at,'; }
-        if ($this->received_at == null) { $err .= 'no received_at,'; }
+        if ($this->snr == null) { $err .= 'Missing snr,'; }
+        if ($this->sent_at == null) { $err .= 'Missing sent_at,'; }
+        if ($this->received_at == null) { $err .= 'Missing received_at,'; }
 
         if ($err) {
             error_log("Failed to save adv: $err");
-            echo $err;
+            $this->error = $err;
         }
 
         return true;

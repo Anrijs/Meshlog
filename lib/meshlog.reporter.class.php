@@ -60,7 +60,11 @@ class MeshLogReporter extends MeshLogEntity {
     }
 
     public function isValid() {
-        return false; // can't save
+        if ($this->public_key == null) { $this->error = "Missing Public Key"; return false; };
+        if ($this->name == null) { $this->error = "Missing Name"; return false; };
+
+        return parent::isValid();
+    }
     }
 }
 

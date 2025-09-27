@@ -64,11 +64,11 @@ class MeshLogChannelMessage extends MeshLogEntity {
         // contact can be empty if it has not advertised yet.
         if ($this->reporter_ref == null) return false;
 
-        if ($this->name == null) { echo 'no name'; return false; }
-        if ($this->hash == null) { echo 'no hash'; return false; }
-        if ($this->message == null) { echo 'no snr'; return false; }
-        if ($this->sent_at == null) { echo 'no sent_at'; return false; }
-        if ($this->received_at == null) { echo 'no received_at'; return false; }
+        if ($this->name == null) { $this->error = 'Missing name'; return false; }
+        if ($this->hash == null) { $this->error = 'Missing hash'; return false; }
+        if ($this->message == null) { $this->error = 'Missing snr'; return false; }
+        if ($this->sent_at == null) { $this->error = 'Missing sent_at'; return false; }
+        if ($this->received_at == null) { $this->error = 'Missing received_at'; return false; }
 
         return true;
     }

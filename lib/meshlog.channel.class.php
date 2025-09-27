@@ -31,8 +31,8 @@ class MeshLogChannel extends MeshLogEntity {
     }
 
     function isValid() {
-        if ($this->hash == null) return false;
-        if ($this->name == null) return false;
+        if ($this->hash == null) { $this->error = "Missing hash"; return false; }
+        if ($this->name == null) { $this->error = "Missing name"; return false; }
 
         return true;
     }

@@ -4,6 +4,7 @@ class MeshLogEntity {
     protected static $table = null;
     private $meshlog = null;
     protected $_id = null;
+    protected $error = '';
 
     function __construct($meshlog) {
         $this->meshlog = $meshlog;
@@ -88,8 +89,9 @@ class MeshLogEntity {
                 $this->_id = $meshlog->pdo->lastInsertId();
             }
         } catch (PDOException $e) {
+            $this->error = $e->getMessage();
             error_log($e->getMessage());
-            echo $e->getMessage();
+            return false;
         }
 
         if ($this->isNew() && $result) {
@@ -168,6 +170,10 @@ class MeshLogEntity {
         return array(
             "objects" => $objects
         );
+    }
+
+    public function getError() {
+        return $this->error;
     }
 }
 
