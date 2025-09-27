@@ -9,7 +9,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASS:-meshcore}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:-meshcore}
     volumes:
-      - ../setup.sql:/docker-entrypoint-initdb.d/10-setup.sql:ro
+      - ../migrations/000_initial_setup.sql:/docker-entrypoint-initdb.d/10-setup.sql:ro
       - ./build/import-setup.sh:/docker-entrypoint-initdb.d/20-import-setup.sh:ro
       - mariadb-data:/var/lib/mysql
     healthcheck:

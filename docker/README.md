@@ -10,7 +10,7 @@ This stack provides:
 
 - **nginx** (serving Meshlog on port `80`)
 - **php-fpm** (running PHP application backend)
-- **MariaDB** (with automatic initialization from `setup.sql` on first start)
+- **MariaDB** (with automatic initialization from `migrations/000_initial_setup.sql` on first start)
 
 Logs from all services are forwarded to container `stdout/stderr`, so you can monitor everything with `docker logs`.
 
@@ -58,7 +58,7 @@ sudo docker compose down
 ```
 
 ## 🗄️ Database Initialization
-- On first start, the stack automatically imports `setup.sql` into MariaDB.
+- On first start, the stack automatically imports `migrations/000_initial_setup.sql` into MariaDB.
 - Database schema will be created.
 
 ## ➕ Adding the First Reporter (Logger)

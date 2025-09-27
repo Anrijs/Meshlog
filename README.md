@@ -6,7 +6,7 @@ Web side for [MeshCore logger firmware](https://github.com/Anrijs/MeshCore/tree/
 - MySQL or MariaDB
 
 ## Installation
-1. Setup MySQL database and add tables form `setup.sql`
+1. Setup MySQL database and add tables form `migrations/000_initial_setup.sql`
 2. Rename `config.example.php` to `config.php` and fill database login details.
 3. Flash logger node [MeshCore logger firmware](https://github.com/Anrijs/MeshCore/tree/logger) (Xiao S3 and T3S3 are currently supported)
 4. Conenct to logger node via serial and set configuration:
