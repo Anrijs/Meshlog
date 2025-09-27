@@ -4,8 +4,13 @@ require_once "../../../config.php";
 include "../utils.php";
 
 $meshlog = new MeshLog($config['db']);
+$err = $meshlog->getError();
 
-$results = $meshlog->getChannels(array('offset' => 0, 'count' => DEFAULT_COUNT, 'after_ms' => getParam('after_ms', 0)));
+if ($err) {
+    $results = array('error' => $err);  
+} else {
+    $results = $meshlog->getChannels(array('offset' => 0, 'count' => DEFAULT_COUNT, 'after_ms' => getParam('after_ms', 0)));
+}
 
 header('Content-Type: application/json; charset=utf-8');
 echo json_encode($results, JSON_PRETTY_PRINT);

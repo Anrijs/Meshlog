@@ -8,11 +8,19 @@ require_once 'meshlog.direct_message.class.php';
 require_once 'meshlog.channel_message.class.php';
 require_once 'meshlog.channel.class.php';
 require_once 'meshlog.reporter.class.php';
+require_once 'meshlog.setting.class.php';
+require_once 'meshlog.user.class.php';
 
 define("MAX_COUNT", 5000);
 define("DEFAULT_COUNT", 500);
 
 class MeshLog {
+    private $error = '';
+    private $version = 1;
+    private $settings = array(
+        MeshlogSetting::KEY_DB_VERSION => 0,
+        MeshlogSetting::KEY_MAX_CONTACT_AGE => 1814400
+    );
 
     function __construct($config) {
         $host = $config['host'] ?? die("Invalid db config");
@@ -26,6 +34,62 @@ class MeshLog {
 
     function __destruct() {
         $this->pdo = null;
+    }
+
+    function getError() {
+        return $this->error;
+    }
+
+    function loadSettings() {
+        $table = MeshLogSetting::getTable();
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) 
+                FROM information_schema.tables 
+                WHERE table_schema = DATABASE() 
+                AND table_name = :table");
+            $stmt->execute(['table' => $table]);
+
+        if ($stmt->fetchColumn() > 0) {
+            $settings = MeshLogSetting::getAll($this, array());
+            foreach ($settings['objects'] as $s) {
+                $k = $s['name'];
+                $v = $s['value'];
+                if ($k) {
+                    $this->settings[$k] = $v;
+                }
+            }
+
+            $users = MeshLogUser::countAll($this);
+            if ($users > 0) return;
+        }
+        $this->error = 'Setup not complete. Go to <a href="setup.php">setup</a>';
+    }
+
+    function getDbVersion() {
+        return $this->getConfig(MeshlogSetting::KEY_DB_VERSION, 0);
+    }
+
+    function updateAvailable() {
+        return $this->version != $this->getDbVersion();
+    }
+
+    function checkUpdates() {
+        if ($this->version != $this->getConfig(MeshlogSetting::KEY_DB_VERSION, 0)) {
+            return "Database upgrade required! <a href=\"login.php\">Login</a>";
+        };
+        return 0;
+    }
+
+    function saveSettings() {
+        MeshLogSetting::saveSettings($this, $this->settings);
+    }
+
+    function getConfig($key, $default=null) {
+        if (!isset($this->settings[$key])) return $default;
+        return $this->settings[$key];
+    }
+
+    function setConfig($key, $value) {
+        // TODO write DB
     }
 
     function authorize($data) {
@@ -177,20 +241,22 @@ class MeshLog {
         );
 
         $results = MeshLogContact::getAll($this, $params);
+        $out = [];
+        $maxage = isset($params['max_age']) ? $params['max_age'] : 0;
 
-        if ($params['advertisements']) {
+        if ($params['advertisements'] || $maxage) {
             foreach ($results['objects'] as $k => $c) {
                 $id = $c['id'];
-                $ad = MeshLogAdvertisement::findBy("contact_id", $id, $this);
+                $ad = MeshLogAdvertisement::findBy("contact_id", $id, $this, array('created_at' => array('operator' => '>', 'value' => $maxage)));
                 if ($ad) {
-                    $results['objects'][$k]['advertisement'] = $ad->asArray();
-                } else {
-                    $results['objects'][$k]['advertisement'] = $ad;
+                    $c['advertisement'] = $ad->asArray();
+                    $out[] = $c;
                 }
             }
+
         }
 
-        return $results;
+        return array("objects" => $out);
     }
 
     public function getAdvertisements($params) {
