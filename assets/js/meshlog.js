@@ -407,11 +407,15 @@ class MeshLogContact extends MeshLogObject {
 
         if (this.flags.dupe) {
             this.dom.hash.classList.add("prio-5");
+        } if (this.isRepeater()) {
+            this.dom.hash.classList.add("prio-4");
         } else {
+            this.dom.hash.classList.remove("prio-4");
             this.dom.hash.classList.remove("prio-5");
         }
 
         this.dom.pubkey.innerText = `Public Key: ${this.data.public_key}`;
+        this.dom.container.dataset.type = this.adv.data.type;
 
         if (this.adv.data.type == 1) {
             this.dom.icon.src = "assets/img/person.svg";
@@ -1273,7 +1277,7 @@ class MeshLog {
             let hashstr = contact.data.public_key.substr(0,2);
 
             // Mark dupes
-            if (hashes.hasOwnProperty(hashstr)) {
+            if (hashes.hasOwnProperty(hashstr) && contact.isRepeater()) {
                 for (let i=0;i<hashes[hashstr].length;i++) {
                     hashes[hashstr][i].flags.dupe = true;
                     hashes[hashstr][i].updateDom();
@@ -1424,7 +1428,7 @@ class MeshLog {
         if (!src || (src.adv && src.isClient())) {
             if (hashes.length > 0) {
                 Object.entries(this.contacts).forEach(([k,v]) => {
-                    if (v.hash == hashes[0] && v.adv && !v.adv.isVeryExpired()) {
+                    if (v.hash == hashes[0] && v.adv && !v.adv.isVeryExpired() && v.isRepeater()) {
                         if (v.adv.data.lat != 0 && v.adv.data.lon != 0) {
                             last.push([v.adv.data.lat, v.adv.data.lon]);
                             if (v.marker) {
@@ -1465,7 +1469,7 @@ class MeshLog {
         for (let i=0;i<hashes.length;i++) {
             let next = [];
             Object.entries(this.contacts).forEach(([k,v]) => {
-                if (v.hash == hashes[i] && v.adv && !v.adv.isVeryExpired()) {
+                if (v.hash == hashes[i] && v.adv && !v.adv.isVeryExpired() && v.isRepeater()) {
                     let current = [v.adv.data.lat, v.adv.data.lon];
                     if (current[0] == 0 && current[1] == 0) return;
 
