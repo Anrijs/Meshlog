@@ -804,6 +804,11 @@ class MeshLog {
                 channel_messages: true,
                 direct_messages: false,
             },
+            contactTypes: {
+                repeaters: true,
+                clients: true,
+                rooms: true,
+            },
             reporters: {
 
             },
@@ -816,8 +821,9 @@ class MeshLog {
         this.dom_settings_reporters = document.getElementById(sreportersid);
         this.dom_settings_contacts = document.getElementById(scontactsid);
 
-        this.__init_types();
-        this.__init_order();
+        this.__init_message_types();
+        this.__init_contact_order();
+        this.__init_contact_types();
 
         this.last = '2025-01-01 00:00:00';
     }
@@ -867,10 +873,18 @@ class MeshLog {
         const items = Array.from(this.dom_contacts.children);
         items.sort(fn);
         if (reverse) items.reverse();
-        items.forEach(item => this.dom_contacts.appendChild(item));
+        items.forEach(item => {
+            let type = parseInt(item.dataset.type);
+            let hidden = false;;
+            if (type == 1 && !this.settings.contactTypes.clients) { hidden = true; }
+            else if (type == 2 && !this.settings.contactTypes.repeaters) { hidden = true; }
+            else if (type == 3 && !this.settings.contactTypes.rooms) { hidden = true; }
+            item.hidden = hidden;
+            this.dom_contacts.appendChild(item)
+        });
     }
 
-    __init_order() {
+    __init_contact_order() {
         let orders = [
             {
                 name: 'Last Advert',
@@ -938,7 +952,44 @@ class MeshLog {
         this.dom_settings_contacts.appendChild(container);
     }
 
-    __init_types() {
+    __init_contact_types() {
+        const self = this;
+        this.dom_settings_contacts.appendChild(
+            this.__createCb(
+                "",
+                "assets/img/tower.svg",
+                this.settings.contactTypes.repeaters,
+                (e) => {
+                    this.settings.contactTypes.repeaters = e.target.checked;
+                    self.sortContacts();
+                }
+            )
+        );
+        this.dom_settings_contacts.appendChild(
+            this.__createCb(
+                "",
+                "assets/img/person.svg",
+                this.settings.contactTypes.clients,
+                (e) => {
+                    this.settings.contactTypes.clients = e.target.checked;
+                    self.sortContacts();
+                }
+            )
+        );
+        this.dom_settings_contacts.appendChild(
+            this.__createCb(
+                "",
+                "assets/img/group.svg",
+                this.settings.contactTypes.rooms,
+                (e) => {
+                    this.settings.contactTypes.rooms = e.target.checked;
+                    self.sortContacts();
+                }
+            )
+        );
+    }
+
+    __init_message_types() {
         const self = this;
         this.dom_settings_types.appendChild(
             this.__createCb(
