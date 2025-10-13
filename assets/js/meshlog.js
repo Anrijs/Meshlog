@@ -234,14 +234,23 @@ class MeshLogContact extends MeshLogObject {
         pubkey.classList.add("sp");
         pubkey.style.wordBreak = 'break-all';
 
+        let telemetry = document.createElement("span");
+        telemetry.classList.add("sp");
+        telemetry.classList.add("c");
+
+        let telemetryDetail = document.createElement("span");
+        telemetryDetail.classList.add("sp");
+        telemetryDetail.classList.add("c");
 
         group.appendChild(date);
         group.appendChild(icon);
         group.appendChild(hash);
         group.appendChild(name);
+        group.appendChild(telemetry);
 
         details.appendChild(type);
         details.appendChild(pubkey);
+        details.appendChild(telemetryDetail);
         details.hidden = true;
 
         container.appendChild(group);
@@ -299,7 +308,9 @@ class MeshLogContact extends MeshLogObject {
             icon,
             details,
             type,
-            pubkey
+            pubkey,
+            telemetry,
+            telemetryDetail
         };
 
         if (root) root.appendChild(container);
@@ -434,6 +445,15 @@ class MeshLogContact extends MeshLogObject {
         this.dom.name.innerText = this.adv.data.name;
         this.dom.date.innerText = this.adv.data.sent_at;
         this.dom.hash.innerText = `[${hashstr}]`;
+
+        if (this.telemetry) {
+            for (let i=0;i<this.telemetry.length;i++) {
+                let sensor = this.telemetry[i];
+                if (sensor.type == 116) {
+                    this.dom.telemetry.innerText = `${sensor.value} V`;
+                }
+            }
+        }
 
         const removeEmojis = (str) => {
             return str.replace(
@@ -1284,6 +1304,7 @@ class MeshLog {
             if (!adv) return;
 
             contact.adv = adv;
+            contact.telemetry = contact.data.telemetry ?? false;
 
             let hashstr = contact.data.public_key.substr(0,2);
 
