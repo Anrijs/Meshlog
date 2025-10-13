@@ -265,14 +265,19 @@ class MeshLog {
     }
 
     public function getChannels($params) {
-        $params['where'] = array();
+        $params['where'] = array('enabled = 1');
         return MeshLogChannel::getAll($this, $params);
     }
 
     public function getChannelMessages($params) {
         $params['where'] = array();
         if (isset($params['id'])) {
+            $ch = MeshLogChannel::findById(intval($id), $this);
+            if (!$ch->enabled) return array();
             $params['where'] = array('channel_id = ' . intval($id));
+        } else {
+            $params['join'] = 'JOIN channels  ON t.channel_id = channels.id';
+            $params['where'] = array('channels.enabled = 1');
         }
 
         return MeshLogChannelMessage::getAll($this, $params);
