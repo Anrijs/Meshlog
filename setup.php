@@ -1,6 +1,13 @@
 <?php
     include 'lib/meshlog.class.php';
 
+    session_start();
+
+    $user = null;
+    if (isset($_SESSION['user'])) {
+        $user = $_SESSION['user'];
+    }
+
     function testConfig($servername, $dbname, $username, $password) {
         $pdo = null;
         try {
@@ -90,8 +97,13 @@
     }
 
     // TOOD cehck admin
-    if ($hasConfig && $hasAdmin) {
+    if ($hasConfig && $hasAdmin && $hasMigrated) {
         echo "Already set up"; // TODO: reditect. // TODO: migrations
+        exit;
+    }
+
+    if ($hasConfig && $hasAdmin && !$user) {
+        header("Location: admin?setup");
         exit;
     }
 

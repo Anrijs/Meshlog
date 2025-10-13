@@ -30,6 +30,8 @@ class MeshLog {
         $this->pdo = new PDO("mysql:host=$host;dbname=$name;charset=utf8mb4", $user, $pass);
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->loadSettings();
+
+        $this->error = $this->checkUpdates();
     }
 
     function __destruct() {
@@ -74,7 +76,7 @@ class MeshLog {
 
     function checkUpdates() {
         if ($this->version != $this->getConfig(MeshlogSetting::KEY_DB_VERSION, 0)) {
-            return "Database upgrade required! <a href=\"login.php\">Login</a>";
+            return "Database upgrade required! <a href=\"setup.php\">Login</a>";
         };
         return 0;
     }

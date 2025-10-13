@@ -30,6 +30,11 @@
                 'permissions' => $login->permissions
             );
             $_SESSION['user'] = $login;
+
+            if (isset($_GET['setup']) || isset($_POST['setup'])) {
+                header("Location: ../setup.php");
+                exit;
+            }
         }
     }
 ?>
@@ -97,6 +102,7 @@
                 <div class="form-group right">
                     <input type="submit" name="login" value="Login">
                 </div>
+                <input type="hidden" name="setup" value="1">
             </form>
         </section>
     </div>
