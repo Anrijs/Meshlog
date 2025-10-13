@@ -1415,6 +1415,7 @@ class MeshLog {
         let hashes = path ? path.split(',') : [];
 
 
+        // Show end/dst on map. Sould be logger
         Object.entries(this.contacts).forEach(([k,v]) => {
             if (v.data.public_key == dst.data.public_key) {
                 if (v.marker) {
@@ -1425,7 +1426,9 @@ class MeshLog {
             }
         });
 
+        // Show start/src on map
         if (!src || (src.adv && src.isClient())) {
+            // If source is client, draw circle on first repeater
             if (hashes.length > 0) {
                 Object.entries(this.contacts).forEach(([k,v]) => {
                     if (v.hash == hashes[0] && v.adv && !v.adv.isVeryExpired() && v.isRepeater()) {
@@ -1451,6 +1454,7 @@ class MeshLog {
                 layers.push(circle);
             }
         } else if (src.adv) {
+            // Starts from node
             if (src.marker) {
                 this.visible_markers.push(src.marker);
                 this.map.removeLayer(src.marker);
@@ -1466,49 +1470,65 @@ class MeshLog {
         const ln_offset = 3;
         const ln_max_offets = 6;
 
-        for (let i=0;i<hashes.length;i++) {
-            let next = [];
-            Object.entries(this.contacts).forEach(([k,v]) => {
-                if (v.hash == hashes[i] && v.adv && !v.adv.isVeryExpired() && v.isRepeater()) {
-                    let current = [v.adv.data.lat, v.adv.data.lon];
+        let prev = [dst.data.lat, dst.data.lon];
+        console.log(dst);;
+
+        for (let i=hashes.length-1;i>=0;i--) {
+            let hash = hashes[i];
+            let matches = 0;
+            let match = false;
+            let matchDist = 99999;
+
+            // Find nearest repeater with hash
+            Object.entries(this.contacts).forEach(([k,c]) => {
+                if (c.hash == hash && c.adv && !c.adv.isVeryExpired() && c.isRepeater()) {
+                    let current = [c.adv.data.lat, c.adv.data.lon];
                     if (current[0] == 0 && current[1] == 0) return;
 
-                    if (v.marker) {
-                        this.visible_markers.push(v.marker);
-                        this.map.removeLayer(v.marker);
-                        v.marker.addTo(this.map);
-                    }
-                    for (let j=0;j<last.length;j++) {
-                        let pair_id = `${last[j][0]}-${last[j][1]}_${current[0]}-${current[1]}`;
-                        if (!this.link_pairs.hasOwnProperty(pair_id)) {
-                            this.link_pairs[pair_id] = 0;
-                        }
-
-                        let offset = Math.floor((this.link_pairs[pair_id] + 1) / 2) * ln_offset;
-                        if (offset > ln_max_offets) offset = 0;
-                        offset *= this.link_pairs[pair_id] % 2 == 0 ? 1 : -1;
-
-
-                        this.link_pairs[pair_id]++;
-
-                        layers.push(L.polyline([
-                            last[j],
-                            current
-                        ], {color: 'white', weight: ln_outline, offset: offset}));
-
-                        layers.push(L.polyline([
-                            last[j],
-                            current
-                        ], {color: color, weight: ln_weight, offset: offset}));
-                    }
-
-                    // Next branches
-                    if (current) {
-                        next.push(current);
+                    matches++;
+                    const dist = haversineDistance(prev[0], prev[1], current.lat, current.lon);
+                    if (!match || dist < matchDist) {
+                        match = c;
+                        matchDist = dist;
                     }
                 }
             });
-            last = next;
+
+            if (matches > 1) {
+                console.log(`Multiple paths (${matches}) detected to ${hash}. Showing shortest.`);
+            }
+
+            // Valid repeater found?
+            if (match) {
+                this.visible_markers.push(match.marker);
+                this.map.removeLayer(match.marker);
+                match.marker.addTo(this.map);
+                let current = [match.adv.data.lat, match.adv.data.lon];
+                let pair_id = `${prev[0]}-${prev[1]}_${current[0]}-${current[1]}`;
+
+                if (!this.link_pairs.hasOwnProperty(pair_id)) {
+                    this.link_pairs[pair_id] = 0;
+                }
+
+                let offset = Math.floor((this.link_pairs[pair_id] + 1) / 2) * ln_offset;
+                if (offset > ln_max_offets) offset = 0;
+                offset *= this.link_pairs[pair_id] % 2 == 0 ? 1 : -1;
+
+
+                this.link_pairs[pair_id]++;
+
+                layers.push(L.polyline([
+                    prev,
+                    current
+                ], {color: 'white', weight: ln_outline, offset: offset}));
+
+                layers.push(L.polyline([
+                    prev,
+                    current
+                ], {color: color, weight: ln_weight, offset: offset}));
+
+                prev = [match.adv.data.lat, match.adv.data.lon];
+            }
         }
 
         let current = [dst.data.lat, dst.data.lon];
@@ -1610,4 +1630,19 @@ class MeshLog {
         }
         return false;
     }
+}
+
+function haversineDistance(lat1, lon1, lat2, lon2) {
+    const toRad = (angle) => (angle * Math.PI) / 180;
+
+    const R = 6371; // Radius of the Earth in km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Distance in km
 }
