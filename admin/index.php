@@ -54,6 +54,30 @@
         tr.disabled {
             text-decoration: line-through;
         }
+        input[type=color] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            border: none;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 1.5rem;
+            background: none;
+            padding: 0;
+            cursor: pointer;
+            vertical-align: bottom;
+            margin-left: 8px;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 0;
+        }
+        input[type="color"]::-moz-color-swatch {
+            border: none;
+        }
     </style>
 </head>
 <body>
@@ -107,16 +131,17 @@
             .then(response => response.json())
             .then(result => {
                 reporters.innerHTML = '';
-                result.objects.forEach(obj => addReporter(reporters, obj));
+                result.objects.forEach(obj => { console.log(obj), addReporter(reporters, obj) });
                 addReporter(reporters, {
-                    id: 'Add', 
+                    id: '',
                     name: 'New Logger',
                     public_key: '',
                     auth: '',
                     lat: '0.00000',
                     lon: '0.00000',
                     authorized: 1,
-                    color: '#ff0000'
+                    color: '#ff0000',
+                    header: 'Add New new Reporter'
                 });
             });
         }
@@ -124,8 +149,28 @@
         function makeInputCell(row, value, type='text') {
             let td = row.insertCell();
             let input = document.createElement("input");
-            input.oninput = () => {
+            td.append(input);
+
+            const isColor = type == 'color';
+            let picker = false;
+
+            if (isColor) {
+                type = 'text';
+                picker = document.createElement("input");
+                picker.type = 'color';
+                picker.value = value;
+                picker.oninput = (e) => {
+                    input.value = e.target.value;
+                    input.style.color = '#1976D2';
+                }
+                td.append(picker);
+            }
+
+            input.oninput = (e) => {
                 input.style.color = '#1976D2';
+                if (isColor && picker) {
+                    picker.value = e.target.value;
+                }
             }
             input.type = type;
             if (type == 'checkbox') {
@@ -133,11 +178,20 @@
             } else {
                 input.value = value;
             }
-            td.append(input);
             return input;
         }
 
         function addReporter(table, reporter) {
+            if (reporter.header ?? false) {
+                let h = document.createElement("h2");
+                h.innerText = reporter.header;
+
+                let hrow = table.insertRow();
+                let hcell = hrow.insertCell();
+                hcell.colSpan = 9;
+                hcell.append(h);
+            }
+
             const id = reporter['id'];
             let row = table.insertRow();
             row.dataset.id = id;
@@ -149,7 +203,8 @@
             let lat = makeInputCell(row, reporter['lat']);
             let lon = makeInputCell(row, reporter['lon']);
             let auth = makeInputCell(row, reporter['auth']);
-            let color = makeInputCell(row, reporter['color']);
+            let color = makeInputCell(row, reporter['color'], 'color');
+
             let authorized = makeInputCell(row, reporter['authorized'], 'checkbox');
             let td2 = row.insertCell();
 
