@@ -157,7 +157,7 @@ public static function getAll($meshlog, $params) {
         $before_ms = $params['before_ms'] ?? 0;
         $secret = $params['secret'] ?? false;
 
-        $where = $params['where'] ?: array();
+        $where = $params['where'] ?? array();
         $sqlJoin = $params['join'] ?? '';
         $sqlWhere = '';
         $sqlBind = array();
