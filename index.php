@@ -209,20 +209,11 @@ var meshlog = new MeshLog(
     "settings-types",
     "settings-reporters",
     "settings-contacts",
+    "warning",
     "error"
 );
 meshlog.loadAll();
 meshlog.setAutorefresh(10000);
-
-function showWarning(msg) {
-    let warn = document.getElementById("warning");
-    warn.innerText = msg;
-    if (msg.length > 0) {
-        warn.hidden = false;
-    } else {
-        warn.hidden = true;
-    }
-}
 
 </script>
 </body>

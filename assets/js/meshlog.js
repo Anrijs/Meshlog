@@ -762,7 +762,7 @@ class MeshLogMessageGroup extends MeshLogObject {
 }
 
 class MeshLog {
-    constructor(map, logsid, contactsid, stypesid, sreportersid, scontactsid, errorid) {
+    constructor(map, logsid, contactsid, stypesid, sreportersid, scontactsid, warningid, errorid) {
         this.reporters = {};
         this.contacts = {};
         this.advertisements = {};
@@ -779,6 +779,7 @@ class MeshLog {
         this.link_pairs = {};
         this.dom_logs = document.getElementById(logsid);
         this.dom_contacts = document.getElementById(contactsid);
+        this.dom_warning = document.getElementById(warningid);
         this.dom_error = document.getElementById(errorid);
         this.timer = false;
         this.autorefresh = 0;
@@ -1135,15 +1136,25 @@ class MeshLog {
             .then(data => onResponse(data));
     }
 
+    showWarning(msg) {
+        this.dom_warning.innerText = msg;
+        if (msg.length > 0) {
+            this.dom_warning.hidden = false;
+        } else {
+            this.dom_warning.hidden = true;
+        }
+    }
+
     showError(message, timeout=0) {
         this.setAutorefresh(0);
         this.dom_error.innerHTML = message;
         this.dom_error.classList.add('show');
 
         // Auto-hide after duration
+        const self = this;
         if (timeout > 0) {
            setTimeout(() => {
-                errorBar.classList.remove('show');
+                self.dom_error.classList.remove('show');
             }, timeout);
         }
     }
@@ -1471,7 +1482,6 @@ class MeshLog {
         const ln_max_offets = 6;
 
         let prev = [dst.data.lat, dst.data.lon];
-        console.log(dst);;
 
         for (let i=hashes.length-1;i>=0;i--) {
             let hash = hashes[i];
@@ -1495,7 +1505,9 @@ class MeshLog {
             });
 
             if (matches > 1) {
-                console.log(`Multiple paths (${matches}) detected to ${hash}. Showing shortest.`);
+                this.showWarning(`Multiple paths (${matches}) detected to ${hash}. Showing shortest.`);
+            } else {
+                this.showWarning('');
             }
 
             // Valid repeater found?
