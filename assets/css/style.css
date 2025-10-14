@@ -145,6 +145,10 @@ h2 {
     margin-right: 8px;
 }
 
+.sm {
+    font-size: 0.9em;
+}
+
 .ti {
     height: 14px;
     width: 14px;

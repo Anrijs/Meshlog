@@ -236,11 +236,10 @@ class MeshLogContact extends MeshLogObject {
 
         let telemetry = document.createElement("span");
         telemetry.classList.add("sp");
-        telemetry.classList.add("c");
+        telemetry.classList.add("sm");
 
         let telemetryDetail = document.createElement("span");
         telemetryDetail.classList.add("sp");
-        telemetryDetail.classList.add("c");
 
         group.appendChild(date);
         group.appendChild(icon);
