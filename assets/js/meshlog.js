@@ -1461,12 +1461,13 @@ class MeshLog {
         let matchDist = 99999;
 
         Object.entries(this.contacts).forEach(([k,c]) => {
-            if (c.checkHash(hash) && c.adv && !c.adv.isVeryExpired() && (!repeater  || c.isRepeater())) {
+            if (c.checkHash(hash) && c.adv && !c.adv.isVeryExpired() && (!repeater || c.isRepeater())) {
                 let current = [c.adv.data.lat, c.adv.data.lon];
                 if (current[0] == 0 && current[1] == 0) return;
 
                 matches++;
-                const dist = haversineDistance(lat, lon, current.lat, current.lon);
+                const dist = haversineDistance(lat, lon, current[0], current[1]);
+
                 if (!match || dist < matchDist) {
                     match = c;
                     matchDist = dist;
@@ -1517,6 +1518,7 @@ class MeshLog {
             addCircle = true;
         }
 
+        let warnings = [];
         for (let i=hashes.length-1;i>=0;i--) {
             let hash = hashes[i];
             let nearest = this.findNearestContact(prev[0], prev[1], hash, true);
@@ -1524,9 +1526,7 @@ class MeshLog {
             // Valid repeater found?
             if (nearest) {
                 if (nearest.matches > 1) {
-                    this.showWarning(`Multiple paths (${nearest.matches}) detected to ${hash}. Showing shortest.`);
-                } else {
-                    this.showWarning('');
+                    warnings.push(`Multiple paths (${nearest.matches}) detected to ${hash}. Showing shortest.`);
                 }
 
                 this.visible_markers.push(nearest.result.marker);
@@ -1559,6 +1559,7 @@ class MeshLog {
                 prev = [nearest.result.adv.data.lat, nearest.result.adv.data.lon];
             }
         }
+        this.showWarning(warnings.join("\n"));
 
         if (addCircle) {
             let pair_id = `c_${prev[0]}-${prev[1]}`;
@@ -1594,6 +1595,7 @@ class MeshLog {
         this.visible_markers = [];
         this.link_pairs = {};
         this.fadeMarkers();
+        this.showWarning('');
     }
 
     clearHighlights() {
