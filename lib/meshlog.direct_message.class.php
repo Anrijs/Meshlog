@@ -59,7 +59,7 @@ class MeshLogDirectMessage extends MeshLogEntity {
         if ($this->reporter_ref == null) return false;
 
         if ($this->hash == null) { echo 'Missing hash'; return false; }
-        if ($this->message == null) { echo 'Missing snr'; return false; }
+        if ($this->message == null) { echo 'Missing message'; return false; }
         if ($this->sent_at == null) { echo 'Missing sent_at'; return false; }
         if ($this->received_at == null) { echo 'Missing received_at'; return false; }
 
