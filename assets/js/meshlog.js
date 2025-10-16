@@ -230,6 +230,10 @@ class MeshLogContact extends MeshLogObject {
         let type = document.createElement("div");
         type.classList.add("sp");
 
+        let first_seen = document.createElement("div");
+        first_seen.classList.add("sp");
+        first_seen.style.wordBreak = 'break-all';
+
         let pubkey = document.createElement("div");
         pubkey.classList.add("sp");
         pubkey.style.wordBreak = 'break-all';
@@ -248,6 +252,7 @@ class MeshLogContact extends MeshLogObject {
         group.appendChild(telemetry);
 
         details.appendChild(type);
+        details.appendChild(first_seen);
         details.appendChild(pubkey);
         details.appendChild(telemetryDetail);
         details.hidden = true;
@@ -308,6 +313,7 @@ class MeshLogContact extends MeshLogObject {
             details,
             type,
             pubkey,
+            first_seen,
             telemetry,
             telemetryDetail
         };
@@ -424,6 +430,7 @@ class MeshLogContact extends MeshLogObject {
             this.dom.hash.classList.remove("prio-5");
         }
 
+        this.dom.first_seen.innerText = `First Seen: ${this.data.created_at}`;
         this.dom.pubkey.innerText = `Public Key: ${this.data.public_key}`;
         this.dom.container.dataset.type = this.adv.data.type;
 
@@ -470,6 +477,7 @@ class MeshLogContact extends MeshLogObject {
         this.dom.container.dataset.time = this.adv.time;
         this.dom.container.dataset.name = removeEmojis(this.adv.data.name).trim();
         this.dom.container.dataset.hash = hashstr;
+        this.dom.container.dataset.first_seen = new Date(this.data.created_at).getTime();
     }
 
     updateMarker() {
@@ -931,6 +939,12 @@ class MeshLog {
                 name: 'Name',
                 fn: (a, b) => { 
                     return a.dataset.name.localeCompare(b.dataset.name);
+                },
+            },
+            {
+                name: 'First Seen',
+                fn: (a, b) => {
+                    return b.dataset.first_seen.localeCompare(a.dataset.first_seen);
                 },
             },
         ];
