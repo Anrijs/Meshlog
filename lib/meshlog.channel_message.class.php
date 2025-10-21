@@ -32,8 +32,8 @@ class MeshLogChannelMessage extends MeshLogEntity {
         $m->message = $msg;
         $m->path = $data['message']['path'] ?? '';
 
-        $m->sent_at = Utils::time2str($data['time']['local']) ?? null;
-        $m->received_at = Utils::time2str($data['time']['sender']) ?? null;
+        $m->received_at = Utils::time2str($data['time']['local']) ?? null;
+        $m->sent_at = Utils::time2str($data['time']['sender']) ?? null;
 
         return $m;
     }

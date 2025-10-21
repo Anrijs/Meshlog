@@ -27,8 +27,8 @@ class MeshLogDirectMessage extends MeshLogEntity {
         $m->path = $data['message']['path'] ?? null;
         $m->name = $data['contact']['name'];
 
-        $m->sent_at = Utils::time2str($data['time']['local']) ?? null;
-        $m->received_at = Utils::time2str($data['time']['sender']) ?? null;
+        $m->received_at = Utils::time2str($data['time']['local']) ?? null;
+        $m->sent_at = Utils::time2str($data['time']['sender']) ?? null;
 
         return $m;
     }

@@ -20,8 +20,8 @@ class MeshLogTelemetry extends MeshLogEntity {
 
         $m->data = json_encode($data['telemetry']) ?? '[]';
 
-        $m->sent_at = Utils::time2str($data['time']['local']) ?? null;
-        $m->received_at = Utils::time2str($data['time']['sender']) ?? null;
+        $m->received_at = Utils::time2str($data['time']['local']) ?? null;
+        $m->sent_at = Utils::time2str($data['time']['sender']) ?? null;
 
         return $m;
     }

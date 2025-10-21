@@ -37,8 +37,8 @@ class MeshLogAdvertisement extends MeshLogEntity {
         $m->lat /= 1000000.0;
         $m->lon /= 1000000.0;
 
-        $m->sent_at = Utils::time2str($data['time']['local']) ?? null;
-        $m->received_at = Utils::time2str($data['time']['sender']) ?? null;
+        $m->received_at = Utils::time2str($data['time']['local']) ?? null;
+        $m->sent_at = Utils::time2str($data['time']['sender']) ?? null;
 
         // $pubkey = $data['contact']['pubkey'] ?? null;
         // $reporter = $data['reporter'] ?? null;
