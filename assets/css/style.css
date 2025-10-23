@@ -389,7 +389,8 @@ h2 {
 }
 
 #login > section {
-    width: 400px;
+    min-width: 400px;
+    width: 600px;
     margin-top: 32px;
     background: #fff;
     padding: 12px;
