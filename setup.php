@@ -197,6 +197,7 @@
                     $err = $result['message'];
                     die("Migration $kname failed: $err");
                 }
+                $current_version = $migration->to;
             }
         } else if ($pdo && !$hasAdmin) {
             $registered = MeshLoguser::register($meshlog, $admin_username, $admin_password, 0xFFFF);

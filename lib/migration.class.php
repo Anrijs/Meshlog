@@ -28,7 +28,7 @@ class Migration {
         if ($current_version != $this->from) {
             return array(
                 'success' => false,
-                'message' => "Can't upgrade from $this->from to $this->to"
+                'message' => "Can't upgrade from $current_version to $this->to"
             );
         }
 
