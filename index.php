@@ -47,6 +47,9 @@
 </div>
 <script>
 
+// Setup linkifyjs default options (default to HTTPS, open links in new page)
+linkify.options.defaults = {...linkify.options.defaults, defaultProtocol: "https", target: "_blank"}
+
 // resize bars
 
 class Bar {
