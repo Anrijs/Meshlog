@@ -761,12 +761,12 @@ class MeshLogMessageGroup extends MeshLogObject {
             this.dom.text.style.color = 'gray';
             hidden = !this._meshlog.settings.types.advertisements;
         } else if (msg instanceof MeshLogChannelMessage) {
-            this.dom.text.innerText = msg.data.message;
+            this.dom.text.innerText = msg.data.message.linkify();
             this.dom.name.style.color = '#d87dff'
             this.dom.text.style.color = 'white';
             hidden = !this._meshlog.settings.types.channel_messages;
         } else if (msg instanceof MeshLogDirecMessage) {
-            this.dom.text.innerText = msg.data.message;
+            this.dom.text.innerText = msg.data.message.linkify();
             this.dom.text.style.color = 'white';
             hidden = !this._meshlog.settings.types.direct_messages;
         } else {
