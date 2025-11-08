@@ -11,13 +11,14 @@ require_once 'meshlog.reporter.class.php';
 require_once 'meshlog.setting.class.php';
 require_once 'meshlog.telemetry.class.php';
 require_once 'meshlog.user.class.php';
+require_once 'meshlog.report.class.php';
 
 define("MAX_COUNT", 5000);
 define("DEFAULT_COUNT", 500);
 
 class MeshLog {
     private $error = '';
-    private $version = 2;
+    private $version = 3;
     private $settings = array(
         MeshlogSetting::KEY_DB_VERSION => 0,
         MeshlogSetting::KEY_MAX_CONTACT_AGE => 1814400
@@ -167,11 +168,31 @@ class MeshLog {
         }
         if (!$contact->save($this)) return $this->repError('failed to save contact');
 
+        // Find adv by id, not older than X
         $adv = MeshLogAdvertisement::fromJson($data, $this);
-        $adv->reporter_ref = $reporter;
         $adv->contact_ref = $contact;
 
-        return $adv->save($this);
+        // 2 min grouping
+        // Can't use sent_at. Device after reboot might send advert
+        // with bad date, making hash duplicate with older messages
+        $minage = date("Y-m-d H:i:s", time() - 120);
+        $existing = MeshLogAdvertisement::findBy("hash", $adv->hash, $this, array('created_at' => array('operator' => '>', 'value' => $minage)));
+
+        if ($existing) {
+            $adv = $existing;
+            $saved = true;
+        } else {
+            $saved = $adv->save($this);
+        }
+
+        if ($saved) {
+            // add report
+            $rep = MeshLogAdvertisementReport::fromJson($data, $this);
+            $rep->object_id = $adv->getId();
+            $rep->reporter_id = $reporter->getId();
+            return $rep->save($this);
+        }
+        return $saved;
     }
 
     private function insertDirectMessage($data, $reporter) {
@@ -187,10 +208,29 @@ class MeshLog {
         }
 
         $dm = MeshLogDirectMessage::fromJson($data, $this);
-        $dm->reporter_ref = $reporter;
         $dm->contact_ref = $contact;
 
-        return $dm->save($this);
+        // 2 min grouping
+        // Can't use sent_at. Device after reboot might send advert
+        // with bad date, making hash duplicate with older messages
+        $minage = date("Y-m-d H:i:s", time() - 120);
+        $existing = MeshLogDirectMessage::findBy("hash", $dm->hash, $this, array('created_at' => array('operator' => '>', 'value' => $minage)));
+
+        if ($existing) {
+            $dm = $existing;
+            $saved = true;
+        } else {
+            $saved = $dm->save($this);
+        }
+
+        if ($saved) {
+            // add report
+            $rep = MeshLogDirectMessageReport::fromJson($data, $this);
+            $rep->object_id = $dm->getId();
+            $rep->reporter_id = $reporter->getId();
+            return $rep->save($this);
+        }
+        return $saved;
     }
 
     private function insertGroupMessage($data, $reporter) {
@@ -214,11 +254,30 @@ class MeshLog {
         if ($advertisement) $contact = MeshLogContact::findById($advertisement->contact_ref->getId(), $this);
 
         $grpmsg = MeshLogChannelMessage::fromJson($data, $this);
-        $grpmsg->reporter_ref = $reporter;
         $grpmsg->contact_ref = $contact;
         $grpmsg->channel_ref = $channel;
 
-        return $grpmsg->save($this);
+        // 2 min grouping
+        // Can't use sent_at. Device after reboot might send advert
+        // with bad date, making hash duplicate with older messagesq
+        $minage = date("Y-m-d H:i:s", time() - 120);
+        $existing = MeshLogChannelMessage::findBy("hash", $grpmsg->hash, $this, array('created_at' => array('operator' => '>', 'value' => $minage)));
+
+        if ($existing) {
+            $grpmsg = $existing;
+            $saved = true;
+        } else {
+            $saved = $grpmsg->save($this);
+        }
+
+        if ($saved) {
+            // add report
+            $rep = MeshLogChannelMessageReport::fromJson($data, $this);
+            $rep->object_id = $grpmsg->getId();
+            $rep->reporter_id = $reporter->getId();
+            return $rep->save($this);
+        }
+        return $saved;
     }
 
     private function insertTelemetry($data, $reporter) {
@@ -237,7 +296,44 @@ class MeshLog {
         $tel->reporter_ref = $reporter;
         $tel->contact_ref = $contact;
 
-        return $tel->save($this);
+        $res = $tel->save($this);
+        if ($res) {
+            $influxHost = "http://influx.99.anrijs.lv:8086";
+            $database   = "SandboxZ";
+
+            $data = json_decode($tel->data, true);
+            foreach ($data as $chan) {
+                if ($chan['type'] != "0") {
+                    $ch = $chan['channel'];
+                    $ty = $chan['type'];
+                    $na = $chan['name'];
+                    $va = $chan['value'];
+
+                    $cdata = "mc_$na,contact=$pubkey,type=$ty,ch=$ch value=$va";
+
+                    $url = "$influxHost/write?db=" . urlencode($database);
+
+                    // Initialize cURL
+                    $ch = curl_init($url);
+                    curl_setopt($ch, CURLOPT_POST, 1);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $cdata);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+                    // Optional: add auth if required
+                    // curl_setopt($ch, CURLOPT_USERPWD, "user:password");
+
+                    $response = curl_exec($ch);
+                    $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+                }
+            }
+        }
+
+        /*
+        [{"channel":1,"type":116,"name":"voltage","value":3.73},{"channel":0,"type":0,"name":"digital_in","value":0}]
+        */
+
+        return $res;
     }
 
     // TODO
@@ -291,9 +387,30 @@ class MeshLog {
         return array("objects" => $out);
     }
 
-    public function getAdvertisements($params) {
+    public function addReports($results, $klass) {
+        foreach ($results['objects'] as $key => $val) {
+            $id = $val['id'];
+
+            $outrep = array();
+            $reports = $klass::getAllReports($this, $id);
+            foreach ($reports['objects'] as $rkey => $rval) {
+                $outrep[] = $rval;
+            }
+
+            $results['objects'][$key]['reports'] = $outrep;
+        }
+        return $results;
+    }
+
+    public function getAdvertisements($params, $reports = false) {
         $params['where'] = array();
-        return MeshLogAdvertisement::getAll($this, $params);
+        $results = MeshLogAdvertisement::getAll($this, $params);
+
+        if ($reports) {
+            $results = $this->addReports($results, 'MeshLogAdvertisementReport');
+        }
+
+        return $results;
     }
 
     public function getChannels($params) {
@@ -301,7 +418,7 @@ class MeshLog {
         return MeshLogChannel::getAll($this, $params);
     }
 
-    public function getChannelMessages($params) {
+    public function getChannelMessages($params, $reports = false) {
         $params['where'] = array();
         if (isset($params['id'])) {
             $ch = MeshLogChannel::findById(intval($id), $this);
@@ -312,16 +429,28 @@ class MeshLog {
             $params['where'] = array('channels.enabled = 1');
         }
 
-        return MeshLogChannelMessage::getAll($this, $params);
+        $results = MeshLogChannelMessage::getAll($this, $params);
+
+        if ($reports) {
+            $results = $this->addReports($results, 'MeshLogChannelMessageReport');
+        }
+
+        return $results;
     }
 
-    public function getDirectMessages($params) {
+    public function getDirectMessages($params, $reports = false) {
         $params['where'] = array();
         if (isset($params['id'])) {
             $params['where'] = array('contact_id = ' . intval($id));
         }
 
-        return MeshLogDirectMessage::getAll($this, $params);
+        $results = MeshLogDirectMessage::getAll($this, $params);
+
+        if ($reports) {
+            $results = $this->addReports($results, 'MeshLogDirectMessageReport');
+        }
+
+        return $results;
     }
 };
 

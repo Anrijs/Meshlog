@@ -30,10 +30,10 @@ if ($err) {
 
     $reporters = $meshlog->getReporters($params);
     $contacts = $meshlog->getContacts($paramsContacts);
-    $advertisements = $meshlog->getAdvertisements($params);
+    $advertisements = $meshlog->getAdvertisements($params, true);
     $channels = $meshlog->getChannels($params);
-    $direct_messages = $meshlog->getDirectMessages($params);
-    $channel_messages = $meshlog->getChannelMessages($params);
+    $direct_messages = $meshlog->getDirectMessages($params, true);
+    $channel_messages = $meshlog->getChannelMessages($params, true);
 
     $results = array(
         'reporters' => $reporters,

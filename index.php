@@ -17,9 +17,10 @@
     <script src="https://cdn.jsdelivr.net/npm/linkify-string@4.3.2/dist/linkify-string.min.js"
         integrity="sha256-b6wRq6tXNDnatickDjAMTffu2ZO2lsaV5Aivm+oh2s4="
         crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.min.js"></script>
     <script src="assets/js/meshlog.js"></script>
     <link rel="stylesheet" href="assets/css/style.css">
-    <title>MeshCore Log v1.99</title>
+    <title>MeshCore Log v1.99.1</title>
 </head>
 <body>
 

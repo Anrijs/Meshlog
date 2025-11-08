@@ -29,7 +29,7 @@ h2 {
     transition: top 0.5s ease;
     z-index: 10000;
     width: 100%;
-    position: absolute;
+    position: fixed;
 }
 
 #error.show {
@@ -142,7 +142,11 @@ h2 {
 }
 
 .sp {
-    margin-right: 8px;
+    margin-right: 4px;
+}
+
+.tag {
+    font-size: 0.9em;
 }
 
 .sm {
@@ -161,9 +165,46 @@ h2 {
 
 .log-entry {
     border-bottom: solid 1px #343536;
-    margin: 2px 0;
+    padding: 2px;
+    align-items: center;
+}
+
+.log-entry-info {
+    margin: 0;
     display: flex;
     align-items: center;
+}
+
+.log-entry-msg {
+    margin: 0;
+    align-items: center;
+}
+
+.t-bright {
+    background: #d87dff;
+    color: #262626;
+    padding: 1px;
+    border-radius: 2px;
+    margin-bottom: 2px;
+    display: inline-block;
+}
+
+.t-white {
+    background: #f5f5f5;
+    color: #262626;
+    border-radius: 2px;
+    padding: 1px;
+    display: inline-block;
+}
+
+.log-entry-reports {
+    border-left: 2px solid #888888;
+    margin-left: 2px;
+}
+
+.log-entry-cehckbox {
+    margin-left: auto;
+    white-space: nowrap;
 }
 
 .dot {
@@ -291,6 +332,19 @@ h2 {
     margin-right: 6px;
 }
 
+.settings-input {
+    display: flex;
+}
+
+.settings-input > input {
+    background-color: #262626;
+    border: solid 1px #2a536d;
+    border-radius: 4px;
+    padding: 4px;
+    margin-top: 4px;
+    flex: 1;
+}
+
 .icon-16 {
     height: 16px;
     vertical-align: middle;
@@ -315,6 +369,16 @@ h2 {
     }
 }
 
+.detail-name {
+    font-weight: bold;
+}
+
+.detail-value {
+    text-overflow: ellipsis;
+    display: block;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
 
 .marker-pin {
     width: 30px;

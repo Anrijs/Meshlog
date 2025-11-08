@@ -14,7 +14,7 @@ if ($err) {
         'count' => DEFAULT_COUNT,
         'after_ms' => getParam('after_ms', 0),
         'before_ms' => getParam('before_ms', 0),
-    ));
+    ), true);
 }
 
 header('Content-Type: application/json; charset=utf-8');
