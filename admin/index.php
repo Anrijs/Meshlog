@@ -139,7 +139,7 @@
                 reporters.innerHTML = '';
                 result.objects.forEach(obj => { console.log(obj), addReporter(reporters, obj) });
                 addReporter(reporters, {
-                    id: '',
+                    id: 'Add',
                     name: 'New Logger',
                     public_key: '',
                     auth: '',
