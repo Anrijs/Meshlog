@@ -190,8 +190,8 @@ h2 {
 }
 
 .t-white {
-    background: #f5f5f5;
-    color: #262626;
+    /* orbackground: #f5f5f5; */
+    color: #f5f5f5;
     border-radius: 2px;
     padding: 1px;
     display: inline-block;
