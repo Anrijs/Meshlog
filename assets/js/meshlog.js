@@ -59,7 +59,43 @@ class MeshLogReporter extends MeshLogObject {
     }
 }
 
-class MeshLogChannel extends MeshLogObject {}
+class MeshLogChannel extends MeshLogObject {
+    constructor(meshlog, data) {
+        super(meshlog, data);
+    }
+
+    isEnabled() {
+        return Settings.getBool(`channels.${this.data.id}.enabled`);
+    }
+
+    createDom(recreate = false) {
+        if (this.dom && !recreate) return this.dom;
+
+        if (this.dom && this.dom.container && this.dom.container.parentNode) {
+            this.dom.container.parentNode.removeChild(this.dom.container);
+            this.dom = null;
+        }
+
+        const self = this;
+
+        let cb = this._meshlog.__createCb(
+            this.data.name,
+            '',
+            `channels.${this.data.id}.enabled`,
+            this.isEnabled(),
+            (e) => {
+                this.enabled = e.target.checked;
+                self._meshlog.__onTypesChanged();
+            }
+        );
+
+        this.dom = {
+            cb: cb,
+        };
+
+        return this.dom;
+    }
+}
 
 class MeshLogContact extends MeshLogObject {
     constructor(meshlog, data) {
@@ -729,7 +765,12 @@ class MeshLogChannelMessage extends MeshLogReportedObject {
     getName() { return {text: `${this.data.name}`, classList: ['t-bright']}; }
     getText() { return {text: this.data.message, classList: ['t-white']}; }
     getPathTag() { return "MSG"; }
-    isVisible() { return Settings.getBool('messageTypes.channel', true); }
+    isVisible() {
+        let chid = this.data.channel_id;
+        let ch = this._meshlog.channels[chid] ?? false;
+        if (ch) ch = ch.isEnabled();
+        return Settings.getBool('messageTypes.channel', true) && ch;
+    }
 }
 
 class MeshLogDirectMessage extends MeshLogReportedObject {
@@ -1040,7 +1081,7 @@ class MeshLog {
                 'messageTypes.advertisements',
                 true,
                 (e) => {
-                    self.__onTypesChanged(e);
+                    self.__onTypesChanged();
                 }
             )
         );
@@ -1052,7 +1093,7 @@ class MeshLog {
                 'messageTypes.channel',
                 true,
                 (e) => {
-                    self.__onTypesChanged(e);
+                    self.__onTypesChanged();
                 }
             )
         );
@@ -1064,7 +1105,7 @@ class MeshLog {
                 'messageTypes.direct',
                 false,
                 (e) => {
-                    self.__onTypesChanged(e);
+                    self.__onTypesChanged();
                 }
             )
         );
@@ -1306,6 +1347,21 @@ class MeshLog {
         this.updateContactsDom();
     }
 
+    onLoadChannels() {
+        Object.entries(this.channels).forEach(([id,channel]) => {
+            this.addChannel(channel);
+        });
+    }
+
+    addChannel(ch) {
+        let isnew = ch.dom ? false : true;
+        let dom = ch.createDom();
+        ch.updateDom();
+        if (isnew) {
+            this.dom_settings_reporters.appendChild(dom.cb);
+        }
+    }
+
     addMessage(msg) {
         let isnew = msg.dom ? false : true;
         let dom = msg.createDom();
@@ -1351,12 +1407,10 @@ class MeshLog {
     }
 
     updateMessagesDom() {
-        const a = performance.now();
         for (const [key, msg] of Object.entries(this.messages)) {
             msg.createDom(false);
             msg.updateDom();
         }
-        console.log(`updateMessagesDom: took ${performance.now() - a} ms`);
     }
 
     onLoadMessages() {
@@ -1367,6 +1421,7 @@ class MeshLog {
     onLoadAll() {
         this.onLoadMessages();
         this.onLoadContacts();
+        this.onLoadChannels();
     }
 
     loadReporters(params={}, onload=null) {
