@@ -1,3 +1,23 @@
+class Settings {
+    static get(key, def=undefined) {
+        if (!localStorage.hasOwnProperty(key)) {
+            localStorage[key] = def;
+        }
+        return localStorage[key];
+    }
+
+    static getBool(key, def=undefined) {
+        if (!localStorage.hasOwnProperty(key)) {
+            localStorage[key] = def;
+        }
+        return localStorage[key] === "true";
+    }
+
+    static set(key, value) {
+        localStorage[key] = value;
+    }
+}
+
 class MeshLogObject {
     constructor(meshlog, data) {
         this._meshlog = meshlog;
@@ -693,7 +713,7 @@ class MeshLogAdvertisement extends MeshLogReportedObject {
     getName() { return {text: this.data.name, classList: []}; }
     getText() { return {text: "", classList: []}; }
     getPathTag() { return "ADV"; }
-    isVisible() { return this._meshlog.settings.types.advertisements; }
+    isVisible() { return Settings.getBool('messageTypes.advertisements', true); }
 }
 
 class MeshLogChannelMessage extends MeshLogReportedObject {
@@ -709,7 +729,7 @@ class MeshLogChannelMessage extends MeshLogReportedObject {
     getName() { return {text: `${this.data.name}`, classList: ['t-bright']}; }
     getText() { return {text: this.data.message, classList: ['t-white']}; }
     getPathTag() { return "MSG"; }
-    isVisible() { return this._meshlog.settings.types.channel_messages; }
+    isVisible() { return Settings.getBool('messageTypes.channel', true); }
 }
 
 class MeshLogDirectMessage extends MeshLogReportedObject {
@@ -730,7 +750,7 @@ class MeshLogDirectMessage extends MeshLogReportedObject {
     getName() { return {text: `${this.data.name}`, classList: ['t-bright']}; }
     getText() { return {text: this.data.message, classList: ['t-white']}; }
     getPathTag() { return "DIR"; }
-    isVisible() { return this._meshlog.settings.types.direct_messages; }
+    isVisible() { return Settings.getBool('messageTypes.direct', false); }
 }
 
 class MeshLogLinkLayer {
@@ -782,27 +802,6 @@ class MeshLog {
          };
          
 
-        // Settings objects
-        this.settings = {
-            types: {
-                advertisements: true,
-                channel_messages: true,
-                direct_messages: false,
-            },
-            contactTypes: {
-                repeaters: true,
-                clients: true,
-                rooms: true,
-            },
-            contactFilter: "",
-            reporters: {
-
-            },
-            contacts: {
-
-            }
-        }
-
         this.dom_settings_types = document.getElementById(stypesid);
         this.dom_settings_reporters = document.getElementById(sreportersid);
         this.dom_settings_contacts = document.getElementById(scontactsid);
@@ -816,15 +815,20 @@ class MeshLog {
         this.last = '2025-01-01 00:00:00';
     }
 
-    __createCb(label, img, checked, onchange) {
+    __createCb(label, img, key, def, onchange) {
         let div = document.createElement("div");
         let cb = document.createElement("input");
         let lbl = document.createElement("label");
         let ico = document.createElement("img");
 
         cb.type = "checkbox";
-        cb.checked = checked;
-        cb.onchange = onchange;
+        cb.checked = Settings.getBool(key, def);
+        console.log('create cb: ', key, cb.checked);
+        cb.onchange = (e) => {
+            Settings.set(key, e.target.checked);
+            localStorage[key] = e.target.checked;
+            onchange(e);
+        };
 
         lbl.innerText = label;
 
@@ -842,12 +846,16 @@ class MeshLog {
         return div;
     }
 
-    __createInput(name, onchange) {
+    __createInput(name, key, def, onchange) {
         let div = document.createElement("div");
         let inp = document.createElement("input");
 
         inp.type = "text";
-        inp.oninput = onchange;
+        inp.value = localStorage[key] ?? def;
+        inp.oninput = (e) => {
+            localStorage[key] = e.target.value;
+            onchange(e);
+        };
         inp.placeholder = name;
 
         div.classList.add("settings-input");
@@ -872,15 +880,18 @@ class MeshLog {
         items.forEach(item => {
             let type = parseInt(item.dataset.type);
             let hidden = false;;
-            if (type == 1 && !this.settings.contactTypes.clients) { hidden = true; }
-            else if (type == 2 && !this.settings.contactTypes.repeaters) { hidden = true; }
-            else if (type == 3 && !this.settings.contactTypes.rooms) { hidden = true; }
+            if (type == 1 && !Settings.getBool('contactTypes.clients', true)) { hidden = true; }
+            else if (type == 2 && !Settings.getBool('contactTypes.repeaters', true)) { hidden = true; }
+            else if (type == 3 && !Settings.getBool('contactTypes.rooms', true)) { hidden = true; }
+            else if (type == 4 && !Settings.getBool('contactTypes.sensors', true)) { hidden = true; }
 
-            if (!hidden && this.settings.contactFilter) {
-                let f = this.settings.contactFilter.toLowerCase();
-                let cmp1 = item.dataset.name.toLowerCase().includes(f);
-                let cmp2 = item.dataset.hash.toLowerCase().includes(f);
-                hidden = !cmp1 && !cmp2;
+            if (!hidden) {
+                let filter = Settings.get('contactFilter.value', '').trim().toLowerCase();
+                if (filter) {
+                    let cmp1 = item.dataset.name.toLowerCase().includes(filter);
+                    let cmp2 = item.dataset.hash.toLowerCase().includes(filter);
+                    hidden = !cmp1 && !cmp2;
+                }
             }
 
             item.hidden = hidden;
@@ -968,9 +979,9 @@ class MeshLog {
             this.__createCb(
                 "",
                 "assets/img/tower.svg",
-                this.settings.contactTypes.repeaters,
+                'contactTypes.repeaters',
+                true,
                 (e) => {
-                    this.settings.contactTypes.repeaters = e.target.checked;
                     self.sortContacts();
                 }
             )
@@ -979,9 +990,9 @@ class MeshLog {
             this.__createCb(
                 "",
                 "assets/img/person.svg",
-                this.settings.contactTypes.clients,
+                'contactTypes.clients',
+                true,
                 (e) => {
-                    this.settings.contactTypes.clients = e.target.checked;
                     self.sortContacts();
                 }
             )
@@ -990,9 +1001,20 @@ class MeshLog {
             this.__createCb(
                 "",
                 "assets/img/group.svg",
-                this.settings.contactTypes.rooms,
+                'contactTypes.rooms',
+                true,
                 (e) => {
-                    this.settings.contactTypes.rooms = e.target.checked;
+                    self.sortContacts();
+                }
+            )
+        );
+        this.dom_settings_contacts.appendChild(
+            this.__createCb(
+                "",
+                "assets/img/sensor.svg",
+                'contactTypes.sensors',
+                true,
+                (e) => {
                     self.sortContacts();
                 }
             )
@@ -1000,8 +1022,9 @@ class MeshLog {
         this.dom_settings_contacts.appendChild(
             this.__createInput(
                 "Filter by Name or Hash/Key",
+                'contactFilter.value',
+                '',
                 (e) => {
-                    this.settings.contactFilter = e.target.value.trim();
                     self.sortContacts();
                 }
             )
@@ -1014,9 +1037,9 @@ class MeshLog {
             this.__createCb(
                 "Advertisements",
                 "assets/img/beacon.png",
-                this.settings.types.advertisements,
+                'messageTypes.advertisements',
+                true,
                 (e) => {
-                    this.settings.types.advertisements = e.target.checked;
                     self.__onTypesChanged(e);
                 }
             )
@@ -1026,9 +1049,9 @@ class MeshLog {
             this.__createCb(
                 "Channel Messages",
                 "assets/img/message.png",
-                this.settings.types.channel_messages,
+                'messageTypes.channel',
+                true,
                 (e) => {
-                    this.settings.types.channel_messages = e.target.checked;
                     self.__onTypesChanged(e);
                 }
             )
@@ -1038,23 +1061,21 @@ class MeshLog {
             this.__createCb(
                 "Direct Messages",
                 "assets/img/message.png",
-                this.settings.types.direct_messages,
+                'messageTypes.direct',
+                false,
                 (e) => {
-                    this.settings.types.direct_messages = e.target.checked;
                     self.__onTypesChanged(e);
                 }
             )
         );
 
-        this.settings.notifications = false;
         this.dom_settings_types.append(
             this.__createCb(
                 "🐐",
                 "",
-                this.settings.notifications,
-                (e) => {
-                    this.settings.notifications = e.target.checked;
-                }
+                'notifications.enabled',
+                false,
+                (e) => { }
             )
         );
     }
@@ -1616,7 +1637,7 @@ class MeshLog {
         this.loadNew((data) => {
             const count = Object.keys(this.new_messages).length;
             if (count) {
-                if (this.settings.notifications) {
+                if (Settings.getBool('notifications.enabled', false)) {
                     new Audio('assets/audio/notif.mp3').play();
                 }
 
