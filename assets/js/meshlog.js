@@ -65,7 +65,7 @@ class MeshLogChannel extends MeshLogObject {
     }
 
     isEnabled() {
-        return Settings.getBool(`channels.${this.data.id}.enabled`);
+        return Settings.getBool(`channels.${this.data.id}.enabled`, true);
     }
 
     createDom(recreate = false) {
