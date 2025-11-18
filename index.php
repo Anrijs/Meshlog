@@ -45,10 +45,13 @@
     <div class="settings" id="about">MeshLog Web v1.99</div>
     <div id="contacts"></div>
 </div>
+
+<div id="context-menu" class="menu">
+</div>
 </div>
 <script>
 
-// Setup linkifyjs default options (default to HTTPS, open links in new page)
+// Setup linkifyjs default options (default to ouse page)
 linkify.options.defaults = {...linkify.options.defaults, defaultProtocol: "https", target: "_blank"}
 
 // resize bars
@@ -220,7 +223,8 @@ var meshlog = new MeshLog(
     "settings-reporters",
     "settings-contacts",
     "warning",
-    "error"
+    "error",
+    "context-menu",
 );
 meshlog.loadAll();
 meshlog.setAutorefresh(10000);

@@ -501,3 +501,26 @@ h2 {
     font-family: monospace;
     margin: 2px 0;
 }
+
+.menu {
+    position: absolute;
+    background: #262626;
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    width: 150px;
+    display: none;
+    z-index: 9999;
+    font-family: monospace;
+}
+
+.menu-item {
+    padding: 6px;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background: #8b7097;
+    color: #fff;
+    border-radius: 4px;
+}

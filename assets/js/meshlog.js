@@ -37,6 +37,11 @@ class MeshLogObject {
     // override
     createDom(recreate = false) {}
     updateDom() {}
+
+    static onclick(e) {}
+    static onmouseover(e) {}
+    static onmouseout(e) {}
+    static oncontextmenu(e) {}
 }
 
 class MeshLogReporter extends MeshLogObject {
@@ -120,6 +125,85 @@ class MeshLogContact extends MeshLogObject {
         }
     }
 
+    static onclick(e) {
+        this.expanded = !this.expanded;
+        this.updateDom();
+    }
+
+    static onmouseover(e) {
+        // Show marker
+        const descid = `c_${this.data.id}`;
+        this._meshlog.layer_descs[descid] = {
+            paths: [],
+            markers: new Set().add(this.data.id),
+            warnings: []
+        }
+        this._meshlog.updatePaths();
+    }
+
+    static onmouseout(e) {
+        const descid = `c_${this.data.id}`;
+        delete this._meshlog.layer_descs[descid];
+        this._meshlog.updatePaths();
+    }
+
+    static oncontextmenu(e) {
+        e.preventDefault();
+
+        this._meshlog.dom_contextmenu
+        const menu = this._meshlog.dom_contextmenu;
+
+        while (menu.hasChildNodes()) {
+            menu.removeChild(menu.lastChild);
+        }
+
+        let saveGpx = (data, name) => {
+            let gpxContent = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+            gpxContent += `<gpx version="1.1" creator="Meshlog">\n`;
+            gpxContent += data;
+            gpxContent += `</gpx>`;
+
+            const blob = new Blob([gpxContent], { type: "application/gpx+xml" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = name;
+            a.click();
+        };
+
+        const c = this;
+
+        let miGpx = document.createElement("div");
+        miGpx.classList.add('menu-item');
+        miGpx.innerText = "Export to GPX";
+        miGpx.onclick = (e) => {
+            if (c.adv) {
+                const wpt = `<wpt lat="${c.adv.data.lat}" lon="${c.adv.data.lon}"><name>${c.data.name}</name></wpt>\n`;
+                saveGpx(wpt, `meshlog_contact_${c.data.id}.gpx`);
+            }
+        };
+
+        let miAll = document.createElement("div");
+        miAll.classList.add('menu-item');
+        miAll.innerText = "Export all to GPX";
+        miAll.onclick = (e) => {
+            let wpt = '';
+            Object.entries(c._meshlog.contacts).forEach(([k,v]) => {
+                if (v.adv && (v.adv.lat != 0 || v.adv.lon != 0)) {
+                    wpt += `<wpt lat="${v.adv.data.lat}" lon="${v.adv.data.lon}"><name>${v.data.name}</name></wpt>\n`;
+                }
+            });
+            saveGpx(wpt, `meshlog_contacts.gpx`);
+        };
+
+        menu.appendChild(miGpx);
+        menu.appendChild(miAll);
+
+        menu.style.display = 'block';
+        menu.style.left = `${e.pageX}px`;
+        menu.style.top = `${e.pageY}px`;
+    }
+
     showNeighbors() {
         // TODO
     }
@@ -141,6 +225,7 @@ class MeshLogContact extends MeshLogObject {
         let divDetails = document.createElement("div");
 
         divContact.classList.add("log-entry");
+        divContact.instance = this;
         divDetails.hidden = true;
 
         let imType = document.createElement("img");
@@ -191,30 +276,7 @@ class MeshLogContact extends MeshLogObject {
             detailsTelemetry: divDetailsTelemetry,
         };
 
-        const self = this;
-        const descid = `c_${this.data.id}`;
-
-        divContact.onclick = (e) => {
-            self.expanded = !self.expanded;
-            self.updateDom();
-        }
-
-        divContact.onmouseover = (e) => {
-            // Show marker
-            self._meshlog.layer_descs[descid] = {
-                paths: [],
-                markers: new Set().add(self.data.id),
-                warnings: []
-            }
-            self._meshlog.updatePaths();
-        }
-
-        divContact.onmouseleave = (e) => {
-            // Reset marker
-            delete self._meshlog.layer_descs[descid];
-            self._meshlog.updatePaths();
-        }
-
+        divContact.instance = this;
         return this.dom;
     }
 
@@ -533,6 +595,7 @@ class MeshLogReport {
         let spSnr = document.createElement("span");
 
         divReport.classList.add('log-entry');
+        divReport.instance = this;
         spDate.classList.add(...['sp', 'c']);
         spDot.classList.add(...['dot']);
         spPath.classList.add(...['sp']);
@@ -549,27 +612,77 @@ class MeshLogReport {
         divReport.append(spPath);
         // divReport.append(spSnr);
 
-        const self = this;
-
-        divReport.onmouseover = (e) => {
-            //if (inShow.checked) return;
-            self.showPath();
-            self._meshlog.updatePaths();
-
-            // show path
-        }
-
-        divReport.onmouseout = (e) => {
-            // hide path
-            if (self.parent.dom.input.show.checked) return;
-            self.hidePath();
-        }
-
         this.dom = {
             container: divReport
         }
 
         return this.dom;
+    }
+
+    static onmouseover(e) {
+        this.showPath();
+        this._meshlog.updatePaths();
+    }
+
+    static onmouseout(e) {
+        if (this.parent.dom.input.show.checked) return;
+        this.hidePath();
+    }
+
+    static oncontextmenu(e) {
+        e.preventDefault();
+
+        this._meshlog.dom_contextmenu
+        const menu = this._meshlog.dom_contextmenu;
+
+        while (menu.hasChildNodes()) {
+            menu.removeChild(menu.lastChild);
+        }
+
+        // get paths
+
+        let trk = '';
+        let wpt = '';
+        Object.entries(this._meshlog.layer_descs).forEach(([k,d]) => {
+            for (const p of d.paths) {
+                if (!trk) trk += `<trkpt lat="${p.from.lat}" lon="${p.from.lon}"></trkpt>\n`;
+                trk += `<trkpt lat="${p.to.lat}" lon="${p.to.lon}"></trkpt>\n`;
+            }
+
+            for (const m of d.markers) {
+                let c = this._meshlog.contacts[m];
+                if (c && c.adv) {
+                    wpt += `<wpt lat="${c.adv.data.lat}" lon="${c.adv.data.lon}"><name>${c.data.name}</name></wpt>\n`;
+                }
+            }
+        });
+
+        trk = `<trk><trkseg>\n${trk}</trkseg></trk>`;
+
+        let miGpx = document.createElement("div");
+        miGpx.classList.add('menu-item');
+        miGpx.innerText = "Export to GPX";
+        miGpx.onclick = (e) => {
+            let gpxContent = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+            gpxContent += `<gpx version="1.1" creator="Meshlog">\n`;
+
+            gpxContent += wpt;
+            gpxContent += trk;
+            gpxContent += `</gpx>`;
+
+            const blob = new Blob([gpxContent], { type: "application/gpx+xml" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "location.gpx";
+            a.click();
+        };
+
+        menu.appendChild(miGpx);
+
+        menu.style.display = 'block';
+        menu.style.left = `${e.pageX}px`;
+        menu.style.top = `${e.pageY}px`;
     }
 }
 
@@ -616,6 +729,7 @@ class MeshLogReportedObject extends MeshLogObject {
         divContainer.dataset.type = this.data.type;
 
         divLog.classList = 'log-entry';
+        divLog.instance = this;
         divReports.classList = 'log-entry-reports';
         divReports.hidden = true;
 
@@ -657,8 +771,6 @@ class MeshLogReportedObject extends MeshLogObject {
         spText.classList.add(...text.classList);
         spText.innerHTML = text.text.linkify();
 
-
-
         if (text.text) {
             // message
             divLine1.append(spDate);
@@ -691,28 +803,6 @@ class MeshLogReportedObject extends MeshLogObject {
             }
         };
 
-        const self = this;
-        divLog.onclick = (e) => {
-            self.expanded = !self.expanded;
-            self.updateDom();
-        }
-
-        divLog.onmouseover = (e) => {
-            // show paths
-            for (let i=0;i<self.reports.length;i++) {
-                self.reports[i].showPath();
-            }
-            self._meshlog.updatePaths();
-        }
-
-        divLog.onmouseout = (e) => {
-            // hide path
-            if (self.dom.input.show.checked) return;
-            for (let i=0;i<this.reports.length;i++) {
-                this.reports[i].hidePath();
-            }
-        }
-
         return this.dom;
     }
 
@@ -738,6 +828,27 @@ class MeshLogReportedObject extends MeshLogObject {
             while (this.dom.reports.firstChild) {
                 this.dom.reports.removeChild(this.dom.reports.firstChild);
             }
+        }
+    }
+
+    static onclick(e) {
+        this.expanded = !this.expanded;
+        this.updateDom();
+    }
+
+    static onmouseover(e) {
+        // show paths
+        for (let i=0;i<this.reports.length;i++) {
+            this.reports[i].showPath();
+        }
+        this._meshlog.updatePaths();
+    }
+
+    static onmouseout(e) {
+        // hide path
+        if (this.dom.input.show.checked) return;
+        for (let i=0;i<this.reports.length;i++) {
+            this.reports[i].hidePath();
         }
     }
 }
@@ -805,7 +916,7 @@ class MeshLogLinkLayer {
 
 
 class MeshLog {
-    constructor(map, logsid, contactsid, stypesid, sreportersid, scontactsid, warningid, errorid) {
+    constructor(map, logsid, contactsid, stypesid, sreportersid, scontactsid, warningid, errorid, contextmenuid) {
         this.reporters = {};
         this.contacts = {};
         this.channels = {};
@@ -822,6 +933,7 @@ class MeshLog {
         this.dom_contacts = document.getElementById(contactsid);
         this.dom_warning = document.getElementById(warningid);
         this.dom_error = document.getElementById(errorid);
+        this.dom_contextmenu = document.getElementById(contextmenuid);
         this.timer = false;
         this.autorefresh = 0;
 
@@ -847,6 +959,21 @@ class MeshLog {
         this.dom_settings_reporters = document.getElementById(sreportersid);
         this.dom_settings_contacts = document.getElementById(scontactsid);
 
+        this.dom_contacts.addEventListener('click', this.handleMouseEvent);
+        this.dom_contacts.addEventListener('mouseover', this.handleMouseEvent);
+        this.dom_contacts.addEventListener('mouseout', this.handleMouseEvent);
+        this.dom_contacts.addEventListener("contextmenu", this.handleMouseEvent);
+
+        this.dom_logs.addEventListener('click', this.handleMouseEvent);
+        this.dom_logs.addEventListener('mouseover', this.handleMouseEvent);
+        this.dom_logs.addEventListener('mouseout', this.handleMouseEvent);
+        this.dom_logs.addEventListener("contextmenu", this.handleMouseEvent);
+
+        const menu = this.dom_contextmenu;
+        document.addEventListener('click', function () {
+            menu.style.display = 'none'; // Hide when clicking anywhere
+        });
+
         this.__init_message_types();
         this.__init_contact_order();
         this.__init_contact_types();
@@ -855,6 +982,31 @@ class MeshLog {
 
         this.last = '2025-01-01 00:00:00';
     }
+
+    handleMouseEvent(e) {
+        const el = e.target.closest('.log-entry');
+        if (!el) return;
+
+        const instance = el.instance;
+        if (!instance) return;
+
+        const cls = instance.constructor;
+
+        switch (e.type) {
+            case 'click':
+                if (cls.onclick) cls.onclick.call(instance, e);
+                break;
+            case 'mouseover':
+                if (cls.onmouseover) cls.onmouseover.call(instance, e);
+                break;
+            case 'mouseout':
+                if (cls.onmouseout) cls.onmouseout.call(instance, e);
+                break;
+            case 'contextmenu':
+                if (cls.oncontextmenu) cls.oncontextmenu.call(instance, e);
+                break;
+        }
+    };
 
     __createCb(label, img, key, def, onchange) {
         let div = document.createElement("div");
