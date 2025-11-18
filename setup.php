@@ -6,13 +6,15 @@
     include 'migrations/001_add_admin_and_settings.php';
     include 'migrations/002_add_telemetry.php';
     include 'migrations/003_add_reports.php';
+    include 'migrations/004_add_raw_packets.php';
 
     // Must be in order!
     $migrationClasses = array(
         'Migration_000',
         'Migration_001',
         'Migration_002',
-        'Migration_003'
+        'Migration_003',
+        'Migration_004',
     );
 
     session_start();

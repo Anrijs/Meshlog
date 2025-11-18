@@ -12,13 +12,14 @@ require_once 'meshlog.setting.class.php';
 require_once 'meshlog.telemetry.class.php';
 require_once 'meshlog.user.class.php';
 require_once 'meshlog.report.class.php';
+require_once 'meshlog.raw_packet.class.php';
 
 define("MAX_COUNT", 5000);
 define("DEFAULT_COUNT", 500);
 
 class MeshLog {
     private $error = '';
-    private $version = 3;
+    private $version = 4;
     private $settings = array(
         MeshlogSetting::KEY_DB_VERSION => 0,
         MeshlogSetting::KEY_MAX_CONTACT_AGE => 1814400
@@ -142,7 +143,7 @@ class MeshLog {
                 return $this->insertTelemetry($data, $reporter);
                 break;
             case 'RAW':
-                return;
+                return $this->insertRawPacket($data, $reporter);
                 break;
         }
 
@@ -334,6 +335,14 @@ class MeshLog {
         */
 
         return $res;
+    }
+
+    private function insertRawPacket($data, $reporter) {
+        if (!$reporter) return $this->repError('no reporter');
+
+        $pkt = MeshLogRawPacket::fromJson($data, $this);
+        $pkt->reporter_id = $reporter->getId();
+        return $pkt->save($this);
     }
 
     // TODO
