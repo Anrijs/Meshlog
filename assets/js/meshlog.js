@@ -178,7 +178,7 @@ class MeshLogContact extends MeshLogObject {
         miGpx.innerText = "Export to GPX";
         miGpx.onclick = (e) => {
             if (c.adv) {
-                const wpt = `<wpt lat="${c.adv.data.lat}" lon="${c.adv.data.lon}"><name>${c.data.name}</name></wpt>\n`;
+                const wpt = `<wpt lat="${c.adv.data.lat}" lon="${c.adv.data.lon}"><name>${escapeXml(c.data.name)}</name></wpt>\n`;
                 saveGpx(wpt, `meshlog_contact_${c.data.id}.gpx`);
             }
         };
@@ -190,7 +190,7 @@ class MeshLogContact extends MeshLogObject {
             let wpt = '';
             Object.entries(c._meshlog.contacts).forEach(([k,v]) => {
                 if (v.adv && (v.adv.lat != 0 || v.adv.lon != 0)) {
-                    wpt += `<wpt lat="${v.adv.data.lat}" lon="${v.adv.data.lon}"><name>${v.data.name}</name></wpt>\n`;
+                    wpt += `<wpt lat="${v.adv.data.lat}" lon="${v.adv.data.lon}"><name>${escapeXml(v.data.name)}</name></wpt>\n`;
                 }
             });
             saveGpx(wpt, `meshlog_contacts.gpx`);
@@ -652,7 +652,7 @@ class MeshLogReport {
             for (const m of d.markers) {
                 let c = this._meshlog.contacts[m];
                 if (c && c.adv) {
-                    wpt += `<wpt lat="${c.adv.data.lat}" lon="${c.adv.data.lon}"><name>${c.data.name}</name></wpt>\n`;
+                    wpt += `<wpt lat="${c.adv.data.lat}" lon="${c.adv.data.lon}"><name>${escapeXml(c.data.name)}</name></wpt>\n`;
                 }
             }
         });
@@ -1910,4 +1910,13 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c; // Distance in km
+}
+
+function escapeXml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
