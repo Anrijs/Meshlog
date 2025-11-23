@@ -306,8 +306,8 @@ h2 {
     z-index: 999;
     margin: 12px;
     margin-left: 20px;
-    padding: 12px;
-    font-size: 1.2em;
+    padding: 4px;
+    font-size: 0.8em;
 }
 
 .settings {
