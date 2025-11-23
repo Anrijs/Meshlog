@@ -461,6 +461,12 @@ class MeshLog {
 
         return $results;
     }
+
+    public function getRawPackets($params) {
+        $params['where'] = array();
+        $results = MeshLogRawPacket::getAll($this, $params);
+        return $results;
+    }
 };
 
 ?>

@@ -66,7 +66,7 @@ class MeshLogRawPacket extends MeshLogEntity {
             'reporter_id' => $this->reporter_id,
             'header' => $this->header,
             'path' => $this->path,
-            'payload' => $this->payload,
+            'payload' => bin2hex($this->payload),
             'snr' => $this->snr,
             'decoded' => $this->decoded,
             'received_at' => $this->received_at,
