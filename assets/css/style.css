@@ -447,6 +447,11 @@ h2 {
     font-size: 0.8em;
 }
 
+.tooltip-hash {
+    color: #444;
+    font-weight: normal;
+}
+
 #login {
     display: flex;
     justify-content: center;

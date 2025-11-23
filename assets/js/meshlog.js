@@ -363,7 +363,7 @@ class MeshLogContact extends MeshLogObject {
             this.marker.unbindTooltip();
 
             if (tooltip === undefined) {
-                tooltip = `<p class="tooltip-title">${this.adv.data.name}</p><p class="tooltip-detail">Last heard: ${this.last.data.created_at}</p>`;
+                tooltip = `<p class="tooltip-title">${this.adv.data.name} <span class="tooltip-hash">[${this.hash}]</span></p><p class="tooltip-detail">Last heard: ${this.last.data.created_at}</p>`;
             }
 
             if (tooltip) {
