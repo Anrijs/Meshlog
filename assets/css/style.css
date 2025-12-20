@@ -114,11 +114,18 @@ h2 {
 
 /* spans */
 
-.c {
+.c, .cc {
     display: inline-block;
-    min-width: 126px;
     font-size: 0.9em;
     color: #666e77;
+}
+
+.cc {
+    min-width: 126px;
+}
+
+.cc {
+    min-width: 54px;
 }
 
 .p {
@@ -208,11 +215,16 @@ h2 {
 }
 
 .dot {
-    height: .7rem;
-    width: .7rem;
+    font-size: .8rem;
     border-radius: 0.35rem;
     display: inline-block;
     margin-right: 4px;
+    color: #fff;
+    padding: 1px 2px;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    width: 80px;
 }
 
 .stripe {

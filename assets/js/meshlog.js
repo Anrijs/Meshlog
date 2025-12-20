@@ -602,18 +602,19 @@ class MeshLogReport {
 
         divReport.classList.add('log-entry');
         divReport.instance = this;
-        spDate.classList.add(...['sp', 'c']);
+        spDate.classList.add(...['sp', 'cc']);
         spDot.classList.add(...['dot']);
         spPath.classList.add(...['sp']);
         spSnr.classList.add(...['sp']);
 
-        let strokeColor = reporter.getStyle().stroke ?? reporter.getStyle().color;
-        let strokeWeight = reporter.getStyle().weight ?? '1.5px';
-        spDot.style.background = reporter.getStyle().color;
-        spDot.style.borderRadius = '1rem';
+        let textColor = reporter.getStyle().color;
+        let strokeColor = reporter.getStyle().stroke ?? textColor;
+        let strokeWeight = reporter.getStyle().weight ?? '1px';
+        spDot.innerText = reporter.data.name;
+        spDot.style.color = textColor;
         spDot.style.border = `solid ${strokeWeight} ${strokeColor}`;
 
-        spDate.innerText = this.data['created_at'];
+        spDate.innerText = this.data['created_at'].split(' ').pop();
         spPath.innerText = this.data['path'] || "direct";
         spSnr.innerText = this.data['snr'];
 
