@@ -49,7 +49,6 @@ class MeshLogTelemetry extends MeshLogEntity {
         if ($this->reporter_ref == null) return false;
 
         if ($this->sent_at == null) { echo 'Missing sent_at'; return false; }
-        if ($this->received_at == null) { echo 'Missing received_at'; return false; }
 
         return true;
     }
