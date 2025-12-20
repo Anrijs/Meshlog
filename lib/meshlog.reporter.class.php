@@ -74,6 +74,7 @@ class MeshLogReporter extends MeshLogEntity {
             "lat" => array($this->lat, PDO::PARAM_STR),
             "lon" => array($this->lon, PDO::PARAM_STR),
             "style" => array($this->style, PDO::PARAM_STR),
+            "color" => array("", PDO::PARAM_STR),
             "auth" => array($this->auth, PDO::PARAM_STR),
         );
     }

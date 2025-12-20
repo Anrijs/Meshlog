@@ -605,10 +605,11 @@ class MeshLogReport {
         spPath.classList.add(...['sp']);
         spSnr.classList.add(...['sp']);
 
-        let stroke = reporter.getStyle().stroke ?? reporter.getStyle().color;
+        let strokeColor = reporter.getStyle().stroke ?? reporter.getStyle().color;
+        let strokeWeight = reporter.getStyle().weight ?? '1.5px';
         spDot.style.background = reporter.getStyle().color;
         spDot.style.borderRadius = '1rem';
-        spDot.style.border = 'solid 1px ' + stroke;
+        spDot.style.border = `solid ${strokeWeight} ${strokeColor}`;
 
         spDate.innerText = this.data['created_at'];
         spPath.innerText = this.data['path'] || "direct";
@@ -1752,6 +1753,8 @@ class MeshLog {
                     const offset = ln_offset * decors[line_uid].length; // TODO - should increase per 
                     decors[line_uid].push(decor_id);
 
+                    const strokeColor = path.reporter.getStyle().stroke ?? linkStrokeColor;
+
                     const decorator1 = L.polylineDecorator(line1, {
                         patterns: [
                         {
@@ -1760,7 +1763,7 @@ class MeshLog {
                             symbol: L.Symbol.arrowHead({
                                 pixelSize: 10,
                                 polygon: false,
-                                pathOptions: { stroke: true, color: linkStrokeColor, weight: ln_decor_outline }
+                                pathOptions: { stroke: true, color: strokeColor, weight: ln_decor_outline }
                             })
                         },
                         {
