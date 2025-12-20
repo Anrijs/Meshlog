@@ -17,7 +17,7 @@
         $reporter->lon = $_POST['lon'] ?? 0;
         $reporter->auth = $_POST['auth'] ?? $errors[] = 'Missing ayth key';
         $reporter->authorized = $_POST['authorized'] ?? true;
-        $reporter->color = $_POST['color'] ?? $errors[] = 'Missing color';
+        $reporter->style = $_POST['style'] ?? $errors[] = 'Missing style';
 
         if (!sizeof($errors)) {
             // save

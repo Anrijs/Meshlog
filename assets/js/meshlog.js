@@ -51,6 +51,10 @@ class MeshLogReporter extends MeshLogObject {
         this.getContactId();
     }
 
+    getStyle() {
+        return JSON.parse(this.data.style);
+    }
+
     getContactId() {
         if (this.contact_id == -1) {
             let contact = Object.values(this._meshlog.contacts)
@@ -295,7 +299,7 @@ class MeshLogContact extends MeshLogObject {
         if (this.isClient()) {
             const rep = this.isReporter();
             if (rep) {
-                receipt = rep.data.color;
+                receipt = rep.getStyle().color;
             } else {
                 iconUrl = 'assets/img/person.svg';
             }
@@ -601,7 +605,10 @@ class MeshLogReport {
         spPath.classList.add(...['sp']);
         spSnr.classList.add(...['sp']);
 
-        spDot.style.background = reporter.data.color;
+        let stroke = reporter.getStyle().stroke ?? reporter.getStyle().color;
+        spDot.style.background = reporter.getStyle().color;
+        spDot.style.borderRadius = '1rem';
+        spDot.style.border = 'solid 1px ' + stroke;
 
         spDate.innerText = this.data['created_at'];
         spPath.innerText = this.data['path'] || "direct";
@@ -1762,7 +1769,7 @@ class MeshLog {
                             symbol: L.Symbol.arrowHead({
                                 pixelSize: 10,
                                 polygon: false,
-                                pathOptions: { stroke: true, color: path.reporter.data.color, weight: ln_decor_weight }
+                                pathOptions: { stroke: true, color: path.reporter.getStyle().color, weight: ln_decor_weight }
                             })
                         }
                     ]

@@ -8,7 +8,7 @@ class MeshLogReporter extends MeshLogEntity {
     public $public_key = null;
     public $lat = null;
     public $lon = null;
-    public $color = null;
+    public $style = null;
     public $auth = null;
 
     public static function fromDb($data, $meshlog) {
@@ -22,7 +22,7 @@ class MeshLogReporter extends MeshLogEntity {
         $m->public_key = $data['public_key'];
         $m->lat = $data['lat'];
         $m->lon = $data['lon'];
-        $m->color = $data['color'];
+        $m->style = $data['style'];
         $m->auth = $data['auth'];
 
         return $m;
@@ -35,7 +35,7 @@ class MeshLogReporter extends MeshLogEntity {
             'public_key' => $this->public_key,
             'lat' => $this->lat,
             'lon' => $this->lon,
-            'color' => $this->color,
+            'style' => $this->style,
         );
 
         if ($secret) {
@@ -73,7 +73,7 @@ class MeshLogReporter extends MeshLogEntity {
             "authorized" => array($this->authorized, PDO::PARAM_STR),
             "lat" => array($this->lat, PDO::PARAM_STR),
             "lon" => array($this->lon, PDO::PARAM_STR),
-            "color" => array($this->color, PDO::PARAM_STR),
+            "style" => array($this->style, PDO::PARAM_STR),
             "auth" => array($this->auth, PDO::PARAM_STR),
         );
     }

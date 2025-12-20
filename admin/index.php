@@ -146,7 +146,7 @@
                     lat: '0.00000',
                     lon: '0.00000',
                     authorized: 1,
-                    color: '#ff0000',
+                    style: '{"color": "#ff0000"}',
                     header: 'Add New new Reporter'
                 });
             });
@@ -209,7 +209,7 @@
             let lat = makeInputCell(row, reporter['lat']);
             let lon = makeInputCell(row, reporter['lon']);
             let auth = makeInputCell(row, reporter['auth']);
-            let color = makeInputCell(row, reporter['color'], 'color');
+            let style = makeInputCell(row, reporter['style'], 'style');
 
             let authorized = makeInputCell(row, reporter['authorized'], 'checkbox');
             let td2 = row.insertCell();
@@ -223,7 +223,7 @@
                     lon: lon.value,
                     auth: auth.value,
                     authorized: authorized.checked ? 1 : 0,
-                    color: color.value
+                    style: style.value
                 }
             };
 
@@ -266,7 +266,7 @@
                 lon: reporter.lon,
                 auth: reporter.auth,
                 authorized: reporter.authorized,
-                color: reporter.color
+                style: reporter.style
             };
 
             if (add) {
