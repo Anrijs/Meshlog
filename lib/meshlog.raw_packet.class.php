@@ -24,9 +24,8 @@ class MeshLogRawPacket extends MeshLogEntity {
         $m->path = $data['packet']['path'] ?? '';
         $m->payload = hex2bin($data['packet']['payload'] ?? '');
         $m->snr = $data['packet']['snr'];
-        $m->decoded = $data['packet']['decoded'];
-
-        $m->received_at = Utils::time2str($data['time']['local']) ?? null;
+        $m->decoded = $data['packet']['decoded'] ?? false;
+        $m->received_at = Utils::time2str($data['time']['local']);
 
         return $m;
     }
