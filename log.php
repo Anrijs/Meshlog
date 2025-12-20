@@ -9,6 +9,10 @@ $systime = floor(microtime(true) * 1000);
 $json["time"]["server"] = $systime;
 
 $meshlog = new MeshLog($config['db']);
-$meshlog->insert($json);
+$response = $meshlog->insert($json);
+
+if (is_array($response) && array_key_exists("error", $response)) {
+    echo $response["error"];
+}
 
 ?>

@@ -310,6 +310,8 @@ class MeshLog {
             $influxHost = "http://influx.99.anrijs.lv:8086";
             $database   = "SandboxZ";
 
+            $errors = "";
+
             $data = json_decode($tel->data, true);
             foreach ($data as $chan) {
                 if ($chan['type'] != "0") {
@@ -328,19 +330,22 @@ class MeshLog {
                     curl_setopt($ch, CURLOPT_POSTFIELDS, $cdata);
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-                    // Optional: add auth if required
-                    // curl_setopt($ch, CURLOPT_USERPWD, "user:password");
-
                     $response = curl_exec($ch);
                     $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     curl_close($ch);
+
+                    if ($httpcode >= 400) {
+                        $errors .= "Error $httpcode: $response for request $cdata\n";
+                    }
                 }
             }
-        }
 
-        /*
-        [{"channel":1,"type":116,"name":"voltage","value":3.73},{"channel":0,"type":0,"name":"digital_in","value":0}]
-        */
+            if (!empty($errors)) {
+                return $this->repError($errors);
+            }
+        } else {
+            return $this->repError('failed to write db');
+        }
 
         return $res;
     }
