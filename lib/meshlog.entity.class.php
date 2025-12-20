@@ -19,7 +19,11 @@ class MeshLogEntity {
         $tableStr = static::$table;
         $type = is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR;
 
-        $conditions = ["$field = :$field"];
+        if ($type == PDO::PARAM_STR) {
+            $conditions = ["BINARY $field = :$field"];
+        } else {
+            $conditions = ["$field = :$field"];
+        }
         $params = [":$field" => [$value, $type]];
 
         foreach ($extra as $key => $condition) {
