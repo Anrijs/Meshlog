@@ -250,7 +250,7 @@ class MeshLog {
             if (!$channel->save($this)) return $this->repError('failed to save channel');
         }
 
-        $advertisement = MeshLogAdvertisement::findBy("name", $name, $this);
+        $advertisement = MeshLogAdvertisement::findBy("name", $name, $this, array(), True);
         $contact = null;
         if ($advertisement) $contact = MeshLogContact::findById($advertisement->contact_ref->getId(), $this);
 
@@ -297,6 +297,14 @@ class MeshLog {
         $tel->reporter_ref = $reporter;
         $tel->contact_ref = $contact;
 
+        $cname = str_replace(
+            " ",
+            "\\ ",
+            $contact->name
+        );
+
+        $cname = str_replace("\"", "", $cname);
+
         $res = $tel->save($this);
         if ($res) {
             $influxHost = "http://influx.99.anrijs.lv:8086";
@@ -310,7 +318,7 @@ class MeshLog {
                     $na = $chan['name'];
                     $va = $chan['value'];
 
-                    $cdata = "mc_$na,contact=$pubkey,type=$ty,ch=$ch value=$va";
+                    $cdata = "mc_$na,contact=$pubkey,type=$ty,ch=$ch,name=$cname value=$va";
 
                     $url = "$influxHost/write?db=" . urlencode($database);
 
