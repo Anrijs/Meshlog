@@ -774,6 +774,7 @@ class MeshLogReportedObject extends MeshLogObject {
         spName.classList.add(...['sp', 't']);
         spName.classList.add(...name.classList);
         spName.innerText = name.text;
+        spName.style.background = name.background ?? '';
 
         spText.classList.add(...['sp']);
         spText.classList.add(...text.classList);
@@ -881,7 +882,7 @@ class MeshLogChannelMessage extends MeshLogReportedObject {
 
     getId()   { return `c_${this.data.id}`; }
     getDate() { return {text: this.data.created_at, classList: []}; }
-    getName() { return {text: `${this.data.name}`, classList: ['t-bright']}; }
+    getName() { return {text: `${this.data.name}`, classList: ['t-bright'], background: str2color(this.data.name)}; }
     getText() { return {text: this.data.message, classList: ['t-white']}; }
     getPathTag() { return "MSG"; }
     isVisible() {
@@ -907,7 +908,7 @@ class MeshLogDirectMessage extends MeshLogReportedObject {
 
     getId()   { return `d_${this.data.id}`; }
     getDate() { return {text: this.data.created_at, classList: []}; }
-    getName() { return {text: `${this.data.name}`, classList: ['t-bright']}; }
+    getName() { return {text: `${this.data.name}`, classList: ['t-bright'], background: str2color(this.data.name) }; }
     getText() { return {text: this.data.message, classList: ['t-white']}; }
     getPathTag() { return "DIR"; }
     isVisible() { return Settings.getBool('messageTypes.direct', false); }
@@ -1929,4 +1930,14 @@ function escapeXml(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
+}
+
+function str2color(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 65%, 55%)`;
 }
