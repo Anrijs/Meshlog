@@ -19,6 +19,8 @@ class Settings {
 }
 
 class MeshLogObject {
+    static idPrefix = "";
+
     constructor(meshlog, data) {
         this._meshlog = meshlog;
         this.data = {}; // db data
@@ -863,6 +865,7 @@ class MeshLogReportedObject extends MeshLogObject {
 }
 
 class MeshLogAdvertisement extends MeshLogReportedObject {
+    static idPrefix = "a";
     getId()   { return `a_${this.data.id}`; }
     getDate() { return {text: this.data.created_at, classList: []}; }
     getTag()  { return {text: "ADVERT", classList: []}; }
@@ -873,6 +876,7 @@ class MeshLogAdvertisement extends MeshLogReportedObject {
 }
 
 class MeshLogChannelMessage extends MeshLogReportedObject {
+    static idPrefix = "c";
     getTag()  {
         let chid = this.data.channel_id;
         let ch = this._meshlog.channels[chid] ?? false;
@@ -894,6 +898,7 @@ class MeshLogChannelMessage extends MeshLogReportedObject {
 }
 
 class MeshLogDirectMessage extends MeshLogReportedObject {
+    static idPrefix = "d";
     getTag()  {
         let text = '→ unknown';
         if (this.reports.length > 0) {
@@ -1378,8 +1383,8 @@ class MeshLog {
 
         for (let i=0;i<data.objects.length;i++) {
             const o = data.objects[i];
-            const id = o.id;
             const obj = new klass(this, o);
+            const id = klass.idPrefix + o.id;
             this.__addObject(dataset, id, obj);
 
             if (o.created_at) {
