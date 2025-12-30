@@ -588,10 +588,10 @@ class MeshLog {
 
         $sql = "
             SELECT
-                c.id,
-                c.public_key,
-                c.name,
-                c.created_at,
+                t.id,
+                t.public_key,
+                t.name,
+                t.created_at,
 
                 -- Latest advertisement
                 (
@@ -607,7 +607,7 @@ class MeshLog {
                         'created_at', a.created_at
                     )
                     FROM advertisements a
-                    WHERE a.contact_id = c.id
+                    WHERE a.contact_id = t.id
                     ORDER BY a.created_at DESC
                     LIMIT 1
                 ) AS advertisement,
@@ -615,17 +615,17 @@ class MeshLog {
                 -- Latest telemetry
                 (
                     SELECT JSON_OBJECT(
-                        'data', t.data
+                        'data', l.data
                     )
-                    FROM telemetry t
-                    WHERE t.contact_id = c.id
-                    ORDER BY t.created_at DESC
+                    FROM telemetry l
+                    WHERE l.contact_id = t.id
+                    ORDER BY l.created_at DESC
                     LIMIT 1
                 ) AS telemetry
 
-            FROM contacts c
+            FROM contacts t
             $extra
-            ORDER BY c.id DESC
+            ORDER BY t.id DESC
             LIMIT :offset,:limit
         ";
 
