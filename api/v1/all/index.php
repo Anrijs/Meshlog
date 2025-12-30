@@ -1,4 +1,5 @@
 <?php
+$start = microtime(true);
 require_once "../../../lib/meshlog.class.php";
 require_once "../../../config.php";
 include "../utils.php";
@@ -23,17 +24,14 @@ if ($err) {
         'count' => getParam('count', DEFAULT_COUNT),
         'after_ms' => getParam('after_ms', 0),
         'before_ms' => getParam('before_ms', 0),
-        'advertisements' => TRUE,
-        'telemetry' => TRUE,
-        'max_age' => $maxage
     );
 
     $reporters = $meshlog->getReporters($params);
-    $contacts = $meshlog->getContacts($paramsContacts);
-    $advertisements = $meshlog->getAdvertisements($params, true);
+    $contacts = $meshlog->getContactsQuick($paramsContacts);
+    $advertisements = $meshlog->getAdvertisementsQuick($params);
     $channels = $meshlog->getChannels($params);
-    $direct_messages = $meshlog->getDirectMessages($params, true);
-    $channel_messages = $meshlog->getChannelMessages($params, true);
+    $direct_messages = $meshlog->getDirectMessagesQuick($params);
+    $channel_messages = $meshlog->getChannelMessagesQuick($params);
 
     $results = array(
         'reporters' => $reporters,
@@ -45,7 +43,9 @@ if ($err) {
     );
 }
 
+$results['time'] = microtime(true) - $start;
+
 header('Content-Type: application/json; charset=utf-8');
-echo json_encode($results, JSON_PRETTY_PRINT);
+echo json_encode($results);
 
 ?>

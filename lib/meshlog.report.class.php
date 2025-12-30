@@ -89,16 +89,40 @@ class MeshLogReport extends MeshLogEntity {
 class MeshLogAdvertisementReport extends MeshLogReport {
     protected static $table = 'advertisement_reports';
     protected static $refname = 'advertisement_id';
+
+    public static function getTable() {
+        return static::$table;
+    }
+
+    public static function getRefName() {
+        return static::$refname;
+    }
 }
 
 class MeshLogChannelMessageReport extends MeshLogReport {
     protected static $table = 'channel_message_reports';
     protected static $refname = 'channel_message_id';
+
+    public static function getTable() {
+        return static::$table;
+    }
+
+    public static function getRefName() {
+        return static::$refname;
+    }
 }
 
 class MeshLogDirectMessageReport extends MeshLogReport {
     protected static $table = 'direct_message_reports';
     protected static $refname = 'direct_message_id';
+
+    public static function getTable() {
+        return static::$table;
+    }
+
+    public static function getRefName() {
+        return static::$refname;
+    }
 }
 
 ?>

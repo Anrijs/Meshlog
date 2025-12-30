@@ -118,6 +118,19 @@ class MeshLogAdvertisement extends MeshLogEntity {
             "sent_at" => array($this->sent_at, PDO::PARAM_STR),
         );
     }
+
+    public static function getPublicFields($prefix='t') {
+        return "$prefix.id,
+                $prefix.contact_id,
+                $prefix.hash,
+                $prefix.name,
+                $prefix.lat,
+                $prefix.lon,
+                $prefix.type,
+                $prefix.flags,
+                $prefix.sent_at,
+                $prefix.created_at";
+    }
 }
 
 ?>
