@@ -6,6 +6,7 @@ class MeshLogContact extends MeshLogEntity {
     public $public_key = null;
     public $enabled = null;
     public $name = null;
+    public $last_heard_at = null;
     public $created_at = null;
 
     public static function fromJson($data, $meshlog) {
@@ -27,6 +28,7 @@ class MeshLogContact extends MeshLogEntity {
         $m->name = $data['name'];
         $m->enabled = $data['enabled'];
         $m->created_at = $data['created_at'];
+        $m->last_heard_at = $data['last_heard_at'];
 
         return $m;
     }
@@ -51,6 +53,29 @@ class MeshLogContact extends MeshLogEntity {
             "name" => array($this->name, PDO::PARAM_STR),
             "enabled" => array($this->enabled, PDO::PARAM_STR),
         );
+    }
+
+    public function updateHeardAt($meshlog) {
+        $meshlog->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        if ($this->isNew()) {
+            return;
+        }
+
+        $tableStr = static::$table;
+        $sql = " UPDATE $tableStr SET last_heard_at = NOW() WHERE id = :id";
+
+        $query = $meshlog->pdo->prepare($sql);
+        $query->bindValue(":id", $this->getId(), PDO::PARAM_INT);
+
+        $result = false;
+        try {
+            $result = $query->execute();
+        } catch (PDOException $e) {
+            $this->error = $e->getMessage();
+            error_log($e->getMessage());
+            return false;
+        }
+        return $result;
     }
 }
 

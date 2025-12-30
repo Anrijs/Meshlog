@@ -10,8 +10,6 @@ $err = $meshlog->getError();
 if ($err) {
     $results = array('error' => $err);
 } else {
-    $maxage = date("Y-m-d H:i:s", time() - $meshlog->getConfig(MeshlogSetting::KEY_MAX_CONTACT_AGE));
-
     $params = array(
         'offset' => getParam('offset', 0),
         'count' => getParam('count', DEFAULT_COUNT),
