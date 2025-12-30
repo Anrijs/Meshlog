@@ -9,12 +9,9 @@ $err = $meshlog->getError();
 if ($err) {
     $results = array('error' => $err);  
 } else {
-    $maxage = date("Y-m-d H:i:s", time() - $meshlog->getConfig(MeshlogSetting::KEY_MAX_CONTACT_AGE));
-    $results = $meshlog->getContacts(array(
+    $results = $meshlog->getContactsQuick(array(
         'offset' => 0, 
         'count' => DEFAULT_COUNT,
-        'advertisements' => TRUE,
-        'telemetry' => TRUE,
         'after_ms' => getParam('after_ms', 0),
         'before_ms' => getParam('before_ms', 0),
     ));

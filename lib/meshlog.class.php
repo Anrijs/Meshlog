@@ -618,9 +618,7 @@ class MeshLog {
 
                 -- Latest telemetry
                 (
-                    SELECT JSON_OBJECT(
-                        'data', l.data
-                    )
+                    SELECT l.data
                     FROM telemetry l
                     WHERE l.contact_id = t.id
                     ORDER BY l.created_at DESC
