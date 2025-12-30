@@ -19,7 +19,7 @@ define("DEFAULT_COUNT", 500);
 
 class MeshLog {
     private $error = '';
-    private $version = 5;
+    private $version = 6;
     private $settings = array(
         MeshlogSetting::KEY_DB_VERSION => 0,
         MeshlogSetting::KEY_MAX_CONTACT_AGE => 1814400
@@ -184,6 +184,7 @@ class MeshLog {
             $saved = true;
         } else {
             $saved = $adv->save($this);
+            $contact->updateHeardAt($this);
         }
 
         if ($saved) {
@@ -222,6 +223,7 @@ class MeshLog {
             $saved = true;
         } else {
             $saved = $dm->save($this);
+            $contact->updateHeardAt($this);
         }
 
         if ($saved) {
@@ -269,6 +271,7 @@ class MeshLog {
             $saved = true;
         } else {
             $saved = $grpmsg->save($this);
+            if ($contact) $contact->updateHeardAt($this);
         }
 
         if ($saved) {
@@ -574,13 +577,14 @@ class MeshLog {
     }
 
     public function getContactsQuick($params) {
+        $maxage = $this->getConfig(MeshlogSetting::KEY_MAX_CONTACT_AGE);
         $offset = (int) ($params['offset'] ?? 0);
         $limit = (int) ($params['count'] ?? DEFAULT_COUNT);
-        $extra = "";
+        $extra = "WHERE last_heard_at >= NOW() - INTERVAL $maxage SECOND ";
         $binds = array();
         $where = $this->getTimeFiltersSql($params);
         if (!empty($where[0])) {
-            $extra .= " WHERE " . $where[0];
+            $extra .= " AND " . $where[0];
             foreach ($where[1] as $w) {
                 $binds[] = $w;
             }
