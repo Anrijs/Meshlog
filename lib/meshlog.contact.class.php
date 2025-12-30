@@ -43,7 +43,8 @@ class MeshLogContact extends MeshLogEntity {
             'id' => $this->getId(),
             'public_key' => $this->public_key,
             'name' => $this->name,
-            'created_at' => $this->created_at
+            'created_at' => $this->created_at,
+            'last_heard_at' => $this->last_heard_at,
         );
     }
 

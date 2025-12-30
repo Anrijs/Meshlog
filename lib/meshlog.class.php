@@ -595,6 +595,7 @@ class MeshLog {
                 t.id,
                 t.public_key,
                 t.name,
+                t.last_heard_at,
                 t.created_at,
 
                 -- Latest advertisement
