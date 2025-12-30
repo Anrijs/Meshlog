@@ -154,7 +154,7 @@ class MeshLogEntity {
         return false;
     }
 
-public static function getAll($meshlog, $params) {
+    public static function getAll($meshlog, $params) {
         $offset = $params['offset'] ?? 0;
         $count = $params['count'] ?? DEFAULT_COUNT;
         $after_ms = $params['after_ms'] ?? 0;
@@ -227,6 +227,10 @@ public static function getAll($meshlog, $params) {
     public function getError() {
         return $this->error;
     }
+
+     public static function getPublicFields($prefix='t') {
+        throw new Exception(static::class . '::getPublicFields not implemented');
+     }
 }
 
 ?>

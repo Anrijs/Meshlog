@@ -9,7 +9,7 @@ $err = $meshlog->getError();
 if ($err) {
     $results = array('error' => $err);
 } else {
-    $results = $meshlog->getAdvertisements(array(
+    $results = $meshlog->getAdvertisementsQuick(array(
         'offset' => 0,
         'count' => DEFAULT_COUNT,
         'after_ms' => getParam('after_ms', 0),
@@ -18,6 +18,6 @@ if ($err) {
 }
 
 header('Content-Type: application/json; charset=utf-8');
-echo json_encode($results, JSON_PRETTY_PRINT);
+echo json_encode($results);
 
 ?>

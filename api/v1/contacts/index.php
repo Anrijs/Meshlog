@@ -20,6 +20,6 @@ if ($err) {
     ));
 }
 header('Content-Type: application/json; charset=utf-8');
-echo json_encode($results, JSON_PRETTY_PRINT);
+echo json_encode($results);
 
 ?>

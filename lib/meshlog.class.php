@@ -14,7 +14,7 @@ require_once 'meshlog.user.class.php';
 require_once 'meshlog.report.class.php';
 require_once 'meshlog.raw_packet.class.php';
 
-define("MAX_COUNT", 5000);
+define("MAX_COUNT", 2500);
 define("DEFAULT_COUNT", 500);
 
 class MeshLog {
@@ -438,6 +438,216 @@ class MeshLog {
     public function getChannels($params) {
         $params['where'] = array('enabled = 1');
         return MeshLogChannel::getAll($this, $params);
+    }
+
+    private function getQuickSql($tklass, $rklass, $extra1='') {
+        $tfields = $tklass::getPublicFields();
+        $ttable = $tklass::getTable();
+        $rtable = $rklass::getTable();
+        $rrefname = $rklass::getRefName();
+
+        $sql = "
+            SELECT
+                $tfields,
+                JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id', r.id,
+                            'reporter_id', r.reporter_id,
+                            'snr', r.snr,
+                            'path', r.path,
+                            'received_at', r.received_at,
+                            'created_at', r.created_at
+                        )
+                ) AS reports
+            FROM (
+                SELECT t.* FROM $ttable t
+                $extra1
+                ORDER BY t.id DESC
+                LIMIT :offset,:limit
+            ) t
+            LEFT JOIN $rtable r ON r.$rrefname = t.id
+            GROUP BY t.id
+            ORDER BY t.id DESC
+        ";
+
+        return $sql;
+    }
+
+    private function getTimeFiltersSql($params) {
+        $after_ms = $params['after_ms'] ?? 0;
+        $before_ms = $params['before_ms'] ?? 0;
+
+        $binds = [];
+        $sqlWhere = "";
+        if ($after_ms > 0) {
+            $after_ms = floor($after_ms / 1000);
+            $sqlWhere = "t.created_at > FROM_UNIXTIME(:after_ms) ";
+            $binds[] = array(":after_ms", $after_ms, PDO::PARAM_INT);
+        }
+        if ($before_ms > 0) {
+            $before_ms = floor($before_ms / 1000);
+            if (strlen($sqlWhere)) {
+                $sqlWhere .= " AND t.created_at < FROM_UNIXTIME(:before_ms)";
+            } else {
+                $sqlWhere = "t.created_at < FROM_UNIXTIME(:before_ms)";
+            }
+            $binds[] = array(":before_ms", $before_ms, PDO::PARAM_INT);
+        }
+
+        return array($sqlWhere, $binds);
+    }
+
+    public function getReportedQuick($params, $tklass, $rklass, $extra, $binds) {
+        $offset = (int) ($params['offset'] ?? 0);
+        $limit = (int) ($params['count'] ?? DEFAULT_COUNT);
+        $where = $this->getTimeFiltersSql($params);
+        if (!empty($where[0])) {
+            $extra .= " WHERE " . $where[0];
+            foreach ($where[1] as $w) {
+                $binds[] = $w;
+            }
+        }
+
+        if ($limit > MAX_COUNT) $limit = MAX_COUNT;
+
+        $sql = $this->getQuickSql(
+            $tklass,
+            $rklass,
+            $extra
+        );
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+
+        foreach ($binds as $b) {
+            $stmt->bindValue($b[0], $b[1], $b[2]);
+        }
+
+        $stmt->execute();
+
+        $results = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $row['reports'] = json_decode($row['reports'], true);
+            $results[] = $row;
+        }
+
+        return array("objects" => $results);
+    }
+
+    public function getChannelMessagesQuick($params) {
+        $channel_id = $params['channel_id'] ?? null;
+        $extra = "JOIN channels c ON c.id = t.channel_id AND c.enabled = 1 ";
+        $binds = array();
+
+        if ($channel_id !== null) {
+            $binds[] = array(':channel_id', (int) $channel_id, PDO::PARAM_INT);
+        }
+
+        return $this->getReportedQuick(
+            $params,
+            'MeshLogChannelMessage',
+            'MeshLogChannelMessageReport',
+            $extra,
+            $binds
+        );
+    }
+
+    public function getDirectMessagesQuick($params) {
+        return $this->getReportedQuick(
+            $params,
+            'MeshLogDirectMessage',
+            'MeshLogDirectMessageReport',
+            "",
+            array()
+        );
+    }
+
+    public function getAdvertisementsQuick($params) {
+        return $this->getReportedQuick(
+            $params,
+            'MeshLogAdvertisement',
+            'MeshLogAdvertisementReport',
+            "",
+            array()
+        );
+    }
+
+    public function getContactsQuick($params) {
+        $offset = (int) ($params['offset'] ?? 0);
+        $limit = (int) ($params['count'] ?? DEFAULT_COUNT);
+        $extra = "";
+        $binds = array();
+        $where = $this->getTimeFiltersSql($params);
+        if (!empty($where[0])) {
+            $extra .= " WHERE " . $where[0];
+            foreach ($where[1] as $w) {
+                $binds[] = $w;
+            }
+        }
+
+        $sql = "
+            SELECT
+                c.id,
+                c.public_key,
+                c.name,
+                c.created_at,
+
+                -- Latest advertisement
+                (
+                    SELECT JSON_OBJECT(
+                        'id', a.id,
+                        'hash', a.hash,
+                        'name', a.name,
+                        'lat', a.lat,
+                        'lon', a.lon,
+                        'type', a.type,
+                        'flags', a.flags,
+                        'sent_at', a.sent_at,
+                        'created_at', a.created_at
+                    )
+                    FROM advertisements a
+                    WHERE a.contact_id = c.id
+                    ORDER BY a.created_at DESC
+                    LIMIT 1
+                ) AS advertisement,
+
+                -- Latest telemetry
+                (
+                    SELECT JSON_OBJECT(
+                        'data', t.data
+                    )
+                    FROM telemetry t
+                    WHERE t.contact_id = c.id
+                    ORDER BY t.created_at DESC
+                    LIMIT 1
+                ) AS telemetry
+
+            FROM contacts c
+            $extra
+            ORDER BY c.id DESC
+            LIMIT :offset,:limit
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+
+        foreach ($binds as $b) {
+            $stmt->bindValue($b[0], $b[1], $b[2]);
+        }
+
+        $stmt->execute();
+
+        $results = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $row['telemetry'] = json_decode($row['telemetry'], true);
+            $row['advertisement'] = json_decode($row['advertisement'], true);
+            $results[] = $row;
+        }
+
+        return array("objects" => $results);
+
     }
 
     public function getChannelMessages($params, $reports = false) {

@@ -17,9 +17,9 @@ if ($err) {
         'after_ms' => getParam('after_ms', 0),
         'before_ms' => getParam('before_ms', 0),
     );
-    $results = $meshlog->getChannelMessages($params, true);
+    $results = $meshlog->getChannelMessagesQuick($params);
 }
 header('Content-Type: application/json; charset=utf-8');
-echo json_encode($results, JSON_PRETTY_PRINT);
+echo json_encode($results);
 
 ?>
