@@ -862,6 +862,7 @@ class MeshLogReportedObject extends MeshLogObject {
         for (let i=0;i<this.reports.length;i++) {
             this.reports[i].hidePath();
         }
+        this._meshlog.updatePaths();
     }
 }
 
@@ -944,6 +945,7 @@ class MeshLog {
         this.visible_markers = new Set();
         this.visible_contacts = {};
         this.links = {};
+        this.canvas_renderer = L.canvas({ padding: 0.5 });
         this.dom_logs = document.getElementById(logsid);
         this.dom_contacts = document.getElementById(contactsid);
         this.dom_warning = document.getElementById(warningid);
@@ -951,6 +953,7 @@ class MeshLog {
         this.dom_contextmenu = document.getElementById(contextmenuid);
         this.timer = false;
         this.autorefresh = 0;
+        this.decor = true;
 
         // epoch of newest object
         this.latest = 0;
@@ -1002,6 +1005,9 @@ class MeshLog {
         const el = e.target.closest('.log-entry');
         if (!el) return;
 
+        const from = e.relatedTarget;
+        const related = (from && el.contains(from));
+
         const instance = el.instance;
         if (!instance) return;
 
@@ -1012,10 +1018,10 @@ class MeshLog {
                 if (cls.onclick) cls.onclick.call(instance, e);
                 break;
             case 'mouseover':
-                if (cls.onmouseover) cls.onmouseover.call(instance, e);
+                if (!related && cls.onmouseover) cls.onmouseover.call(instance, e);
                 break;
             case 'mouseout':
-                if (cls.onmouseout) cls.onmouseout.call(instance, e);
+                if (!related && cls.onmouseout) cls.onmouseout.call(instance, e);
                 break;
             case 'contextmenu':
                 if (cls.oncontextmenu) cls.oncontextmenu.call(instance, e);
@@ -1726,8 +1732,8 @@ class MeshLog {
                     [path.from.lat, path.from.lon]
                 ];
 
-                let line1 = L.polyline(linePath, {color: linkStrokeColor, weight: ln_outline});
-                let line2 = L.polyline(linePath, {color: linkColor, weight: ln_weight});
+                let line1 = L.polyline(linePath, {renderer: this.canvas_renderer, color: linkStrokeColor, weight: ln_outline});
+                let line2 = L.polyline(linePath, {renderer: this.canvas_renderer, color: linkColor, weight: ln_weight});
 
                 if (!links.includes(line_id)) {
                     links.push(line_id);
@@ -1770,7 +1776,7 @@ class MeshLog {
                             symbol: L.Symbol.arrowHead({
                                 pixelSize: 10,
                                 polygon: false,
-                                pathOptions: { stroke: true, color: strokeColor, weight: ln_decor_outline }
+                                pathOptions: { renderer: this.canvas_renderer, stroke: true, color: strokeColor, weight: ln_decor_outline }
                             })
                         },
                         {
@@ -1779,13 +1785,15 @@ class MeshLog {
                             symbol: L.Symbol.arrowHead({
                                 pixelSize: 10,
                                 polygon: false,
-                                pathOptions: { stroke: true, color: path.reporter.getStyle().color, weight: ln_decor_weight }
+                                pathOptions: { renderer: this.canvas_renderer, stroke: true, color: path.reporter.getStyle().color, weight: ln_decor_weight }
                             })
                         }
                     ]
                     });
 
-                    decorator1.addTo(this.link_layers);
+                    if (this.decor) {
+                        decorator1.addTo(this.link_layers);
+                    }
                 }
 
                 // Markers
@@ -1852,7 +1860,6 @@ class MeshLog {
     hidePath(id) {
         if (!this.layer_descs.hasOwnProperty(id)) return;
         delete this.layer_descs[id];
-        this.updatePaths();
     }
 
     refresh() {
