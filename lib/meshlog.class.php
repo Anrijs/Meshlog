@@ -126,28 +126,44 @@ class MeshLog {
 
         $type = $data['type'];
 
-        switch ($type) {
-            case 'ADV':
-                return $this->insertAdvertisement($data, $reporter);
-                break;
-            case 'MSG':
-                return $this->insertDirectMessage($data, $reporter);
-                break;
-            case 'PUB':
-                return $this->insertGroupMessage($data, $reporter);
-                break;
-            case 'SYS':
-                return $this->insertSelfReport($data, $reporter);
-                break;
-            case 'TEL':
-                return $this->insertTelemetry($data, $reporter);
-                break;
-            case 'RAW':
-                return $this->insertRawPacket($data, $reporter);
-                break;
-        }
+        try {
+            $this->pdo->beginTransaction();
+            $rep = array();
+            switch ($type) {
+                case 'ADV':
+                    $rep = $this->insertAdvertisement($data, $reporter);
+                    break;
+                case 'MSG':
+                    $rep = $this->insertDirectMessage($data, $reporter);
+                    break;
+                case 'PUB':
+                    $rep = $this->insertGroupMessage($data, $reporter);
+                    break;
+                case 'SYS':
+                    $rep = $this->insertSelfReport($data, $reporter);
+                    break;
+                case 'TEL':
+                    $rep = $this->insertTelemetry($data, $reporter);
+                    break;
+                case 'RAW':
+                    $rep = $this->insertRawPacket($data, $reporter);
+                    break;
+                default:
+                    $rep = $this->repError("Unknowwn type: $type");
+                    break;
+            }
 
-        error_log("Unknowwn type: $type");
+            if (is_array($rep) && array_key_exists("error", $rep)) {
+                $rep["error"];
+                $this->pdo->rollBack();
+            } else {
+                $this->pdo->commit();
+            }
+        } catch (Throwable $e) {
+            $this->pdo->rollBack();
+            error_log($e);
+            throw $e;
+        }
     }
 
     private function insertAdvertisement($data, $reporter) {
@@ -159,7 +175,7 @@ class MeshLog {
         $encname = $data['contact']['name'];
         $data['contact']['name'] = $encname;
 
-        $contact = MeshLogContact::findBy("public_key", $pubkey, $this);
+        $contact = MeshLogContact::findBy("public_key", $pubkey, $this, array(), false, true);
 
         if ($contact) {
             $contact->name = $data['contact']['name'];
@@ -177,7 +193,14 @@ class MeshLog {
         // Can't use sent_at. Device after reboot might send advert
         // with bad date, making hash duplicate with older messages
         $minage = date("Y-m-d H:i:s", time() - 120);
-        $existing = MeshLogAdvertisement::findBy("hash", $adv->hash, $this, array('created_at' => array('operator' => '>', 'value' => $minage)));
+        $existing = MeshLogAdvertisement::findBy(
+            "hash",
+            $adv->hash,
+            $this,
+            array('created_at' => array('operator' => '>', 'value' => $minage)),
+            false,
+            true
+        );
 
         if ($existing) {
             $adv = $existing;
@@ -203,7 +226,7 @@ class MeshLog {
         $pubkey = $data['contact']['pubkey'] ?? null;
         if (!$pubkey) return $this->repError('no key');
 
-        $contact = MeshLogContact::findBy("public_key", $pubkey, $this);
+        $contact = MeshLogContact::findBy("public_key", $pubkey, $this, array(), false, true);
         if (!$contact) {
             $contact = MeshLogContact::fromJson($data, $this);
             if (!$contact->save($this)) return $this->repError('failed to save contact');
@@ -216,7 +239,14 @@ class MeshLog {
         // Can't use sent_at. Device after reboot might send advert
         // with bad date, making hash duplicate with older messages
         $minage = date("Y-m-d H:i:s", time() - 120);
-        $existing = MeshLogDirectMessage::findBy("hash", $dm->hash, $this, array('created_at' => array('operator' => '>', 'value' => $minage)));
+        $existing = MeshLogDirectMessage::findBy(
+            "hash",
+            $dm->hash,
+            $this,
+            array('created_at' => array('operator' => '>', 'value' => $minage)),
+            false,
+            true
+        );
 
         if ($existing) {
             $dm = $existing;
@@ -245,14 +275,14 @@ class MeshLog {
         if (!$text) return $this->repError('no message');
         $name = explode(':', $text, 2)[0];
 
-        $channel = MeshLogChannel::findBy("hash", $hash, $this);
+        $channel = MeshLogChannel::findBy("hash", $hash, $this, array(), false, true);
 
         if (!$channel) {
             $channel = MeshLogChannel::fromJson($data, $this);
             if (!$channel->save($this)) return $this->repError('failed to save channel');
         }
 
-        $advertisement = MeshLogAdvertisement::findBy("name", $name, $this, array(), True);
+        $advertisement = MeshLogAdvertisement::findBy("name", $name, $this, array(), true, true);
         $contact = null;
         if ($advertisement) $contact = MeshLogContact::findById($advertisement->contact_ref->getId(), $this);
 
