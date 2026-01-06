@@ -83,6 +83,12 @@
         input[type="color"]::-moz-color-swatch {
             border: none;
         }
+        .logger-name {
+            margin-left: 8px;
+            padding: 2px;
+            font-size: 0.8rem;
+            border-radius: 0.35rem;
+        }
     </style>
 </head>
 <body>
@@ -137,7 +143,7 @@
             .then(response => response.json())
             .then(result => {
                 reporters.innerHTML = '';
-                result.objects.forEach(obj => { console.log(obj), addReporter(reporters, obj) });
+                result.objects.forEach(obj => { addReporter(reporters, obj) });
                 addReporter(reporters, {
                     id: 'Add',
                     name: 'New Logger',
@@ -150,6 +156,17 @@
                     header: 'Add New new Reporter'
                 });
             });
+        }
+
+        function makeColorInput(cell, value, onchange) {
+            picker = document.createElement("input");
+            picker.type = 'color';
+            picker.value = value;
+            picker.oninput = (e) => {
+                onchange(e.target.value);
+            }
+            cell.append(picker);
+            return picker;
         }
 
         function makeInputCell(row, value, type='text') {
@@ -204,17 +221,43 @@
             let td1 = row.insertCell();
             td1.innerText = id;
 
+            let style = 0;
+            try {
+                style = JSON.parse(reporter['style']);
+            } catch {
+                console.log(reporter);
+                style = {color: reporter['style'] };
+            }
+
             let name = makeInputCell(row, reporter['name']);
             let key = makeInputCell(row, reporter['public_key']);
             let lat = makeInputCell(row, reporter['lat']);
             let lon = makeInputCell(row, reporter['lon']);
             let auth = makeInputCell(row, reporter['auth']);
-            let style = makeInputCell(row, reporter['style'], 'style');
+
+            lat.style.maxWidth = '80px';
+            lon.style.maxWidth = '80px';
+
+            let tdstyle = row.insertCell();
+            let psample = document.createElement("span")
+            psample.innerText = reporter['name'];
+            psample.classList.add('logger-name');
+            psample.style.color = style['color'];
+            psample.style.border = `solid 1px ${style['stroke'] ?? style['color']}`;
+            let pcolor = makeColorInput(tdstyle, style['color'], value => {
+                psample.style.color = value;
+            });
+            let pstroke = makeColorInput(tdstyle, style['stroke'] ?? style['color'], value => {
+                psample.style.border = `solid 1px ${value}`;
+            });
+            tdstyle.append(psample);
 
             let authorized = makeInputCell(row, reporter['authorized'], 'checkbox');
             let td2 = row.insertCell();
 
             let getReporter = () => { 
+                console.log(pcolor);
+                console.log(pcolor.value);
                 return {
                     id: id,
                     name: name.value,
@@ -223,7 +266,10 @@
                     lon: lon.value,
                     auth: auth.value,
                     authorized: authorized.checked ? 1 : 0,
-                    style: style.value
+                    style: JSON.stringify({
+                        color: pcolor.value,
+                        stroke: pstroke.value
+                    })
                 }
             };
 
