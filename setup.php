@@ -8,6 +8,7 @@
     include 'migrations/003_add_reports.php';
     include 'migrations/004_add_raw_packets.php';
     include 'migrations/005_add_reporter_style.php';
+    include 'migrations/006_add_contact_last_heard.php';
 
     // Must be in order!
     $migrationClasses = array(
@@ -17,6 +18,7 @@
         'Migration_003',
         'Migration_004',
         'Migration_005',
+        'Migration_006',
     );
 
     session_start();
