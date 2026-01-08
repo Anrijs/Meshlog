@@ -118,6 +118,7 @@ class MeshLogContact extends MeshLogObject {
 
         this.flags.dupe = false;
         this.hash = data.public_key.substr(0, 2).toLowerCase();
+        this.neighbors_visible = false;
 
         if (data.advertisement) {
             this.adv = new MeshLogAdvertisement(meshlog, data.advertisement);
@@ -210,12 +211,169 @@ class MeshLogContact extends MeshLogObject {
         menu.style.top = `${e.pageY}px`;
     }
 
-    showNeighbors() {
-        // TODO
+    getLayerDescPrefix() {
+        return `nb${this.data.id}:`;
+    }
+
+    showNeighbors(rx=true, tx=true, markers=false) {
+        if (this.isClient()) return; // not supported
+
+        let contactPairs = {
+            pairs: {},
+            addPair: (src, dst) => {
+                if (!src || !dst) return;
+                if (!src.adv || !dst.adv) return;
+                if (src.adv.data.lat == 0 && src.adv.data.lon == 0) return;
+
+                const key = `${src.data.id}_${dst.data.id}`;
+
+                if (!contactPairs.pairs.hasOwnProperty(key)) {
+                    contactPairs.pairs[key] = {
+                        count: 1,
+                        src,
+                        dst,
+                    };
+                } else {
+                    contactPairs.pairs[key].count += 1;
+                }
+            }
+        };
+
+        Object.entries(this._meshlog.messages).forEach(([k,m]) => {
+            let src_id = m.data.contact_id;
+            let src = this._meshlog.contacts[src_id] ?? false;
+
+            if (!src) return;
+
+            m.reports.forEach(r => {
+                let path = r.data.path ?? undefined;
+                if (path == undefined) return; 
+                let hashes = path ? path.split(",") : [];
+
+                let reporter = this._meshlog.reporters[r.data.reporter_id] ?? false;
+                if (!reporter) return;
+                
+
+                // If message is from this contact, neighbor is first path hash
+                if (src === this) {
+                    if (hashes.length == 0) {
+                        // direct to reporter
+                        if (reporter.getContactId() == -1) return;
+
+                        contactPairs.addPair(src, this._meshlog.contacts[reporter.getContactId()]);
+                    } else {
+                        // to neareset contact
+                        let nearest = this._meshlog.findNearestContact(this.data.lat, this.data.lon, hashes[0], true);
+                        if (nearest.result) {
+                            contactPairs.addPair(src, nearest.result);
+                        }
+                    }
+                } else {
+                    // decode hashes
+                    if (hashes.length == 0) return;
+                    let idx = hashes.indexOf(this.hash);
+                    if (idx < 0) return;
+                    idx += 1;
+
+                    // Link contains contact hash
+                    // Simulate link up to contact and check if might be possible
+
+                    let prev = {
+                        lat: reporter.data.lat,
+                        lon: reporter.data.lon,
+                        contact_id: reporter.getContactId()
+                    };
+
+                    let end = hashes.length + 1;
+                    let contacts = {0: src, [end]: this._meshlog.contacts[reporter.getContactId()] ?? null}
+
+                    for (let i=hashes.length-1;i>=0;i--) {
+                        let hash = hashes[i];
+                        let nearest = this._meshlog.findNearestContact(prev.lat, prev.lon, hash, true);
+
+                        // Valid repeater found?
+                        if (nearest) {
+                            if (nearest.matches > 1) {
+                                // desc.warnings.push(`Multiple paths (${nearest.matches}) detected to ${hash}. Showing shortest.`);
+                            }
+
+                            let current = {
+                                lat: nearest.result.adv.data.lat,
+                                lon: nearest.result.adv.data.lon,
+                                contact_id: nearest.result.data.id
+                            };
+
+                            contacts[i+1] = nearest.result;
+                            prev = current;
+                        } else {
+                            contacts[i+1] = null;
+                            console.log(`no nearest for hash ${hash}`);
+                        }
+                    }
+
+                    let cThis = contacts[idx];
+                    let cPrev = contacts[idx-1];
+                    let cNext = contacts[idx+1];
+
+                    if (!cThis || cThis != this) return;
+                    if (cNext) { contactPairs.addPair(cThis, cNext); }
+                    if (cPrev) { contactPairs.addPair(cPrev, cThis); }
+                }
+            });
+        });
+
+        Object.entries(contactPairs.pairs).forEach(([k,p]) => {
+            let isTx = p.src == this;
+            if (isTx && !tx) return;
+            if (!isTx && !rx) return;
+
+            let key = `${this.getLayerDescPrefix()}${k}`;
+            this._meshlog.layer_descs[key] = {
+                paths: [
+                    new MeshLogLinkLayer(
+                        {
+                            lat: p.src.adv.data.lat,
+                            lon: p.src.adv.data.lon,
+                            contact_id: p.src.data.id
+                        },
+                        {
+                            lat: p.dst.adv.data.lat,
+                            lon: p.dst.adv.data.lon,
+                            contact_id: p.dst.data.id
+                        },
+                        {
+                            data: {
+                                id: 0
+                            },
+                            getStyle: () => {
+                                return {
+                                    color: isTx ? 'red' : 'blue',
+                                    strokeColor: 'white',
+                                    strokeWeight: '1px'
+                                };
+                            }
+                        },
+                        false
+                    )
+                ],
+                markers: markers ? new Set([p.src.data.id, p.dst.data.id]) : new Set([this.data.id]),
+                warnings: []
+            }
+        });
+
+        this._meshlog.updatePaths();
+        this.neighbors_visible = true;
     }
 
     hideNeighbors() {
-        // TODO
+        let prefix = this.getLayerDescPrefix();
+        Object.keys(this._meshlog.layer_descs).forEach(k => {
+            if (k.startsWith(prefix)) {
+                delete this._meshlog.layer_descs[k];
+            }
+        });
+        this._meshlog.updatePaths();
+        this.neighbors_visible = false;
     }
 
     createDom(recreate = false) {
@@ -256,14 +414,38 @@ class MeshLogContact extends MeshLogObject {
         let divDetailsFirst = document.createElement("div");
         let divDetailsKey = document.createElement("div");
         let divDetailsTelemetry = document.createElement("div");
+        let btnShowNeighbors = document.createElement("button");
 
         divDetails.append(divDetailsType);
         divDetails.append(divDetailsFirst);
         divDetails.append(divDetailsKey);
         divDetails.append(divDetailsTelemetry);
 
+        if (!this.isClient()) {
+            divDetails.append(btnShowNeighbors);
+        }
+
         divContainer.append(divContact);
         divContainer.append(divDetails);
+
+        const self = this;
+        btnShowNeighbors.classList.add('btn');
+        btnShowNeighbors.innerText = "Show Neighbors";
+        btnShowNeighbors.onclick = (e) => {
+            if (self.neighbors_visible) {
+                self.hideNeighbors();
+            } else {
+                self.showNeighbors();
+            }
+
+            if (self.neighbors_visible) {
+                e.target.innerText = "Hide Neighbors";
+                e.target.classList.add("active");
+            } else {
+                e.target.innerText = "Show Neighbors";
+                e.target.classList.remove("active");
+            }
+        }
 
         this.dom = {
             container: divContainer,
@@ -280,6 +462,7 @@ class MeshLogContact extends MeshLogObject {
             detailsFirst: divDetailsFirst,
             detailsKey: divDetailsKey,
             detailsTelemetry: divDetailsTelemetry,
+            btnShowNeighbors: btnShowNeighbors
         };
 
         divContact.instance = this;
@@ -842,6 +1025,10 @@ class MeshLogReportedObject extends MeshLogObject {
             }
         }
     }
+
+    isAdvertisement() { return this instanceof MeshLogAdvertisement; }
+    isChannelMessage() { return this instanceof ChannelMessage; }
+    isDirectMessage() { return this instanceof DirectMessage; }
 
     static onclick(e) {
         this.expanded = !this.expanded;
