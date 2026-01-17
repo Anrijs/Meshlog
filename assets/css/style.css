@@ -312,14 +312,18 @@ h2 {
 
 #warning {
     background: #262626;
-    color: #ff0;
     position: absolute;
     bottom: 0;
     z-index: 999;
     margin: 12px;
     margin-left: 20px;
     padding: 4px;
-    font-size: 0.8em;
+}
+
+.warnings {
+    color: #ff0;
+    font-size: 1.0em;
+    margin: 2px;
 }
 
 .settings {

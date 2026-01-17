@@ -1194,6 +1194,7 @@ class MeshLog {
         this.__init_message_types();
         this.__init_contact_order();
         this.__init_contact_types();
+        this.__init_warnings();
 
         this.link_layers.addTo(this.map);
 
@@ -1505,6 +1506,28 @@ class MeshLog {
         });
     }
 
+    __init_warnings() {
+        this.dom_warning_messages = document.createElement("div");
+        this.dom_warning_messages.classList.add("warnings");
+        this.dom_warning_messages_btn = document.createElement("button");
+        this.dom_warning_messages_btn.innerText = "Show less";
+        this.dom_warning_messages_btn.classList.add("btn");
+        this.dom_warning_messages_btn.onclick = (e) => {
+            let str = "Show more";
+            let com = "1";
+            if (this.dom_warning.dataset.compact === com) {
+                com = "0";
+                str = "Show less";
+            }
+            this.dom_warning.dataset.compact = com;
+            this.dom_warning_messages_btn.innerText = str;
+            this.updatePaths();
+        }
+
+        this.dom_warning.append(this.dom_warning_messages);
+        this.dom_warning.append(this.dom_warning_messages_btn);
+    }
+
     __addObject(dataset, id, obj) {
         if (dataset.hasOwnProperty(id)) {
             dataset[id].merge(obj.data);
@@ -1559,7 +1582,7 @@ class MeshLog {
     }
 
     showWarning(msg) {
-        this.dom_warning.innerText = msg;
+        this.dom_warning_messages.innerText = msg;
         if (msg.length > 0) {
             this.dom_warning.hidden = false;
         } else {
@@ -2001,7 +2024,11 @@ class MeshLog {
             warnings = [...warnings, ...desc.warnings];
         });
         warnings = [...new Set(warnings)];
-        this.showWarning(warnings.join("\n"));
+        let warningsStr = `${warnings.length} Path warnings`;
+        if (this.dom_warning.dataset.compact != "1") {
+            warningsStr = warnings.join("\n");
+        }
+        this.showWarning(warningsStr);
         this.fadeMarkers();
     }
 
