@@ -541,3 +541,18 @@ h2 {
     color: #fff;
     border-radius: 4px;
 }
+
+.warn-icon {
+    margin: 0 4px;
+}
+
+.warn-tooltip {
+    position: absolute;
+    background: black;
+    color: yellow;
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: none;
+    z-index: 9999;
+}
